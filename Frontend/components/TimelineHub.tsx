@@ -610,6 +610,10 @@ export const TimelineHub = memo(({
       setSelectedClipIds([clip.id]);
     }
 
+    if (setActivePreviewId) {
+      setActivePreviewId(clip.id);
+    }
+
     const rect = e.currentTarget.getBoundingClientRect();
     const startOffsetX = e.clientX - rect.left;
     const startY = e.clientY;
@@ -681,7 +685,7 @@ export const TimelineHub = memo(({
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-  }, [clips, selectedClipIds, pixelsPerSecond, getSnappedTime, tracks, paddingLeft, isMagnetEnabled]);
+  }, [clips, selectedClipIds, pixelsPerSecond, getSnappedTime, tracks, paddingLeft, isMagnetEnabled, setActivePreviewId]);
 
   /* ── Magnetic Alignment (Ripple editing) ──────────────────── */
   const triggerMagnetRipple = useCallback((trackId: string) => {
@@ -879,6 +883,16 @@ export const TimelineHub = memo(({
         e.preventDefault();
         (document.querySelector("[title=\"Play/Pause\"]") as HTMLButtonElement | null)?.click();
       }
+      if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        const nextTime = Math.max(0, currentTime - 1);
+        if (handleTimelineClick) handleTimelineClick(nextTime);
+      }
+      if (e.code === "ArrowRight") {
+        e.preventDefault();
+        const nextTime = Math.min(totalDuration, currentTime + 1);
+        if (handleTimelineClick) handleTimelineClick(nextTime);
+      }
       if (e.code === "Delete" || e.code === "Backspace") {
         selectedClipIds.forEach(id => handleDeleteClip(id));
         setSelectedClipIds([]);
@@ -906,7 +920,7 @@ export const TimelineHub = memo(({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedClipIds, clipboard, handleCopy, handlePaste, handleDuplicate, handleSplitClip, handleAddMarker, handleDeleteClip]);
+  }, [selectedClipIds, clipboard, handleCopy, handlePaste, handleDuplicate, handleSplitClip, handleAddMarker, handleDeleteClip, currentTime, totalDuration, handleTimelineClick]);
 
   const trackAccent: Record<string, string> = {
     video:   "bg-teal-500",

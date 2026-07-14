@@ -34,7 +34,7 @@ export function QuickEditUploadScreen() {
     const { isLoggedIn, session, logout } = useAuth();
 
     const [dragOver, setDragOver] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [fileError, setFileError] = useState<string | null>(null);
@@ -75,31 +75,40 @@ export function QuickEditUploadScreen() {
         setDragOver(false);
     }, []);
 
-    const validateAndSetFile = (selectedFile: File) => {
+    const validateAndAddFiles = (selectedFiles: File[]) => {
         setFileError(null);
-        if (selectedFile.type.startsWith('video/') || selectedFile.type.startsWith('image/')) {
-            setFile(selectedFile);
-        } else {
-            setFileError("Unsupported file type. Please upload a video (e.g., mp4) or image file.");
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
+        const validFiles: File[] = [];
+        let hasError = false;
+
+        for (const f of selectedFiles) {
+            if (f.type.startsWith('video/') || f.type.startsWith('image/')) {
+                validFiles.push(f);
+            } else {
+                hasError = true;
             }
+        }
+
+        if (validFiles.length > 0) {
+            setFiles(prev => [...prev, ...validFiles]);
+        }
+        if (hasError) {
+            setFileError("Some files had unsupported types. Only video and image files are accepted.");
         }
     };
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         setDragOver(false);
-        const droppedFile = e.dataTransfer.files?.[0];
-        if (droppedFile) {
-            validateAndSetFile(droppedFile);
+        const droppedFiles = Array.from(e.dataTransfer.files || []);
+        if (droppedFiles.length > 0) {
+            validateAndAddFiles(droppedFiles);
         }
     }, []);
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            validateAndSetFile(selectedFile);
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length > 0) {
+            validateAndAddFiles(selectedFiles);
         }
     }, []);
 
@@ -109,18 +118,18 @@ export function QuickEditUploadScreen() {
     }, []);
 
     const handleContinue = useCallback(() => {
-        if (file) {
+        if (files.length > 0) {
             setUploading(true);
             setTimeout(() => {
                 setUploading(false);
                 navigate("/quick-edit/style", {
                     state: {
-                        initialMedia: {
+                        initialMedias: files.map(file => ({
                             name: file.name,
                             type: file.type.startsWith('video/') ? 'video' : 'image',
                             preview: URL.createObjectURL(file),
                             file: file
-                        },
+                        })),
                         initialAudio: audioFile ? {
                             name: audioFile.name,
                             type: 'direct',
@@ -130,7 +139,7 @@ export function QuickEditUploadScreen() {
                 });
             }, 1500);
         }
-    }, [file, audioFile, navigate]);
+    }, [files, audioFile, navigate]);
 
     // ----- STYLES -----
     const styles: Record<string, React.CSSProperties> = {
@@ -424,13 +433,13 @@ export function QuickEditUploadScreen() {
         ctaBtn: {
             width: '100%',
             height: '56px',
-            background: file ? CONFIG.gradient : 'rgba(255, 255, 255, 0.15)',
+            background: files.length > 0 ? CONFIG.gradient : 'rgba(255, 255, 255, 0.15)',
             color: '#FFFFFF',
             border: 'none',
             borderRadius: '16px',
             fontSize: '16px',
             fontWeight: '600',
-            cursor: file ? 'pointer' : 'not-allowed',
+            cursor: files.length > 0 ? 'pointer' : 'not-allowed',
             transition: 'all 0.25s ease',
             marginTop: '4px',
             display: 'flex',
@@ -441,7 +450,7 @@ export function QuickEditUploadScreen() {
             position: 'relative',
             overflow: 'hidden',
         },
-        ctaBtnHover: file ? {
+        ctaBtnHover: files.length > 0 ? {
             transform: 'translateY(-2px)',
             boxShadow: CONFIG.gradientHover,
         } : {},
@@ -566,12 +575,13 @@ export function QuickEditUploadScreen() {
                         <input
                             ref={fileInputRef}
                             type="file"
+                            multiple
                             accept="video/mp4,video/mov,video/avi,video/mkv,image/png,image/jpeg,image/webp,image/gif"
                             onChange={handleFileSelect}
                             style={styles.hiddenInput}
                         />
 
-                        {!file ? (
+                        {files.length === 0 ? (
                             <>
                                 <div style={styles.uploadIcon}>
                                     {dragOver ? <Upload size={72} color={CONFIG.accent} /> : <FileVideo size={72} color={CONFIG.textMuted2} />}
@@ -591,19 +601,75 @@ export function QuickEditUploadScreen() {
                                 </div>
                             </>
                         ) : (
-                            <>
-                                <FileVideo size={80} color={CONFIG.accent} style={{ marginBottom: '20px' }} />
-                                <div style={styles.fileName}>
-                                    <FileVideo size={16} />
-                                    {file.name.length > 40 ? file.name.substring(0, 37) + '...' : file.name}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setFile(null); setFileError(null); }}
-                                        style={{ background: 'none', border: 'none', color: CONFIG.textMuted, cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center' }}
-                                    >
-                                        <X size={16} />
-                                    </button>
+                            <div style={{ width: '100%', maxHeight: '250px', overflowY: 'auto', padding: '16px' }} onClick={(e) => e.stopPropagation()}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+                                    {files.map((f, index) => (
+                                        <div
+                                            key={index}
+                                            style={{
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: '12px',
+                                                padding: '12px 16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                maxWidth: '300px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                            }}
+                                        >
+                                            <FileVideo size={20} color={CONFIG.accent} />
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '150px' }}>
+                                                    {f.name}
+                                                </span>
+                                                <span style={{ fontSize: '10px', color: CONFIG.textMuted2 }}>
+                                                    {(f.size / (1024 * 1024)).toFixed(2)} MB
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setFiles(prev => prev.filter((_, i) => i !== index));
+                                                }}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.08)',
+                                                    border: 'none',
+                                                    borderRadius: '50%',
+                                                    width: '24px',
+                                                    height: '24px',
+                                                    color: '#ef4444',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    padding: '0',
+                                                    transition: 'all 0.2s',
+                                                }}
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
-                            </>
+                                <div 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    style={{
+                                        marginTop: '16px',
+                                        fontSize: '11px',
+                                        color: CONFIG.accent,
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                    }}
+                                >
+                                    + Add More Files
+                                </div>
+                            </div>
                         )}
                     </div>
 
@@ -676,9 +742,9 @@ export function QuickEditUploadScreen() {
 
                     {/* CTA Button */}
                     <button
-                        style={{ ...styles.ctaBtn, ...(file ? styles.ctaBtnHover : {}) }}
+                        style={{ ...styles.ctaBtn, ...(files.length > 0 ? styles.ctaBtnHover : {}) }}
                         onClick={handleContinue}
-                        disabled={!file || uploading}
+                        disabled={files.length === 0 || uploading}
                     >
                         {uploading ? (
                             <><Loader className="animate-spin" size={18} /> Processing...</>

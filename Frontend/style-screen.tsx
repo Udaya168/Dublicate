@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
     Music2,
     Briefcase,
@@ -58,6 +58,9 @@ import {
     Edit2,
     Star,
     HelpCircle,
+    Search,
+    Waves,
+    Camera,
     Upload,
     Sliders,
     Activity,
@@ -94,8 +97,9 @@ import { useAspectRatio, PRESET_RATIOS } from "./hooks/useAspectRatio";
 import { AspectRatioCard } from "./components/AspectRatioCard";
 import { generateThumbnail } from "@/lib/thumbnail";
 import { CustomRatioModal } from "./components/CustomRatioModal";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, GripVertical, CassetteTape, Target, Cloud, Eye, Columns, SunDim, Flame, Disc, Grid3X3, Flower2, ChevronUp, ChevronDown } from "lucide-react";
 import { TimelineHub } from "./components/TimelineHub";
+import { getEffectModule, getAllProEffects, getEffectsByCategory } from './effects';
 
 import { PremiumModal } from "@/components/premium-modal";
 import { MusicPickerModal } from "@/components/editor/music-picker-modal";
@@ -345,19 +349,19 @@ const CAPTION_STYLE_PRESETS = [
 ];
 
 const QUICK_TOOLS = [
-    { id: 'effects', icon: Sparkle, label: 'Effects', color: 'text-amber-300' },
-    { id: 'transitions', icon: Layers, label: 'Transitions', color: 'text-purple-300' },
-    { id: 'filters', icon: Palette, label: 'Filters', color: 'text-pink-300' },
-    { id: 'speed', icon: Timer, label: 'Speed', color: 'text-purple-300' },
-    { id: 'trim', icon: Scissors, label: 'Trim', color: 'text-green-300' },
-    { id: 'copy', icon: Copy, label: 'Copy', color: 'text-blue-300' },
-    { id: 'text-tool', icon: Type, label: 'Text', color: 'text-fuchsia-300' },
-    { id: 'rotate', icon: RotateCw, label: 'Rotate', color: 'text-fuchsia-300' },
-    { id: 'volume', icon: Volume2, label: 'Volume', color: 'text-purple-300' },
-    { id: 'crop', icon: Crop, label: 'Crop', color: 'text-red-300' },
-    { id: 'zoom', icon: ZoomIn, label: 'Zoom', color: 'text-yellow-300' },
-    { id: 'keyframe', icon: MonitorPlay, label: 'Keyframe', color: 'text-emerald-300' },
-    { id: 'captions', icon: MessageSquare, label: 'Captions', color: 'text-green-300' },
+    { id: 'effects', icon: Sparkle, label: 'EFFECTS', color: '#facc15' },
+    { id: 'transitions', icon: Layers, label: 'TRANSITIONS', color: '#818cf8' },
+    { id: 'filters', icon: Palette, label: 'FILTERS', color: '#fb7185' },
+    { id: 'speed', icon: Timer, label: 'SPEED', color: '#a78bfa' },
+    { id: 'trim', icon: Scissors, label: 'TRIM', color: '#34d399' },
+    { id: 'copy', icon: Copy, label: 'COPY', color: '#38bdf8' },
+    { id: 'text-tool', icon: Type, label: 'TEXT', color: '#f472b6' },
+    { id: 'rotate', icon: RotateCw, label: 'ROTATE', color: '#c084fc' },
+    { id: 'volume', icon: Volume2, label: 'VOLUME', color: '#818cf8' },
+    { id: 'crop', icon: Crop, label: 'CROP', color: '#fb7185' },
+    { id: 'zoom', icon: ZoomIn, label: 'ZOOM', color: '#facc15' },
+    { id: 'keyframe', icon: MonitorPlay, label: 'KEYFRAME', color: '#34d399' },
+    { id: 'captions', icon: MessageSquare, label: 'CAPTIONS', color: '#34d399' },
 ];
 
 const CANVAS_PREVIEW_EFFECTS = [
@@ -746,7 +750,6 @@ const FilmoraLeftPanel = memo(({
 });
 
 const QuickToolsGrid = memo(({ QUICK_TOOLS, activeTool, setActiveTool, copyActiveClip, setExpandedSections }: any) => (
-
     <div className="grid grid-cols-3 gap-2">
         {QUICK_TOOLS.map((tool: any, index: number) => {
             const isSelected = activeTool === tool.id;
@@ -775,13 +778,16 @@ const QuickToolsGrid = memo(({ QUICK_TOOLS, activeTool, setActiveTool, copyActiv
                             setExpandedSections((prev: any) => ({ ...prev, text: true }));
                         }
                     }}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border transition-all active:scale-[0.98] group ${isSelected
-                        ? 'bg-purple-500/20 border-purple-400 shadow-[0_0_10px_rgba(168, 85, 247,0.2)]'
-                        : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/15'
+                    className={`flex flex-col items-center justify-center h-[60px] p-2 rounded-[14px] border transition-all duration-300 active:scale-[0.96] group cursor-pointer ${isSelected
+                        ? 'bg-[#181a3b]/85 border-[#a855f7]/55 shadow-[0_0_15px_rgba(168,85,247,0.22)]'
+                        : 'bg-[#0e1026]/75 border-white/[0.04] hover:bg-[#131530]/90 hover:border-white/[0.12] hover:shadow-[0_2px_10px_rgba(0,0,0,0.3)]'
                         }`}
                 >
-                    <tool.icon className={`w-4 h-4 ${tool.color} group-hover:scale-105 transition-transform`} />
-                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-wider text-center line-clamp-1">{tool.label}</span>
+                    <tool.icon 
+                        className="w-5 h-5 mb-1 group-hover:scale-110 transition-transform duration-300"
+                        style={{ color: tool.color }}
+                    />
+                    <span className="text-[7.5px] font-black text-slate-300 uppercase tracking-widest text-center leading-none truncate w-full">{tool.label}</span>
                 </button>
             );
         })}
@@ -2103,6 +2109,55 @@ const ToolInspector = memo(({
     }
 });
 
+const EFFECT_ICONS: Record<string, React.ComponentType<any>> = {
+    // Classic
+    'fade-in': Sunrise,
+    'velocity': Zap,
+    'motion-blur': Wind,
+    'shake': Activity,
+    'flash-effect': Sparkle,
+    'rgb-split': Layers,
+    'film-grain': Film,
+    'soft-glow': Sparkle,
+    'old-tv': Tv,
+    'slow-motion': Timer,
+    'smooth-zoom': ZoomIn,
+    'glitch': ScanLine,
+    'motion-tracking': Crosshair,
+
+    // Pro Pack
+    'pro-smooth-zoom': ZoomIn,
+    'pro-hyper-zoom': Zap,
+    'pro-beat-shake': Activity,
+    'pro-camera-flash': Sparkle,
+    'pro-speed-ramp': Gauge,
+    'pro-gaussian-blur': Aperture,
+    'pro-motion-blur': Wind,
+    'pro-zoom-blur': Target,
+    'pro-dream-blur': Cloud,
+    'pro-rgb-split': Layers,
+    'pro-chromatic-aberration': Contrast,
+    'pro-vhs': CassetteTape,
+    'pro-crt-screen': Monitor,
+    'pro-film-grain': Film,
+    'pro-dust-overlay': Sparkles,
+    'pro-film-burn': Flame,
+    'pro-light-leak': SunDim,
+    'pro-glow': Sparkle,
+    'pro-bloom': Flower2,
+    'pro-vintage-film': Camera,
+    'pro-cinematic-lut': Disc,
+    'pro-black-white': Contrast,
+    'pro-sepia': ImageIcon,
+    'pro-ripple': Waves,
+    'pro-heat-wave': Flame,
+    'pro-wave-distortion': Waves,
+    'pro-fisheye': Eye,
+    'pro-pixelate': Grid3X3,
+    'pro-mirror': Columns,
+    'pro-kaleidoscope': Aperture,
+};
+
 export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const { profile, session } = useAuth();
 
@@ -2331,8 +2386,12 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             base = `translate(${posX}px, ${posY}px) scale(${scaleX}, ${scaleY}) rotate(${rotationDegrees}deg) `;
         }
         
+        const video = videoRef.current;
+        const tVal = video ? video.currentTime : 0;
+        const isWithinClassicTime = tVal >= classicStartTime && tVal <= classicEndTime;
+
         let shakeOffset = '';
-        if (selectedEffect === 'shake') {
+        if (selectedEffect === 'shake' && isWithinClassicTime) {
             const t = performance.now() / 100;
             const x = Math.sin(t * 18) * shakeStrength * 2.5;
             const y = Math.cos(t * 22) * shakeStrength * 2.5;
@@ -2340,13 +2399,13 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         }
 
         let rgbOffset = '';
-        if (selectedEffect === 'rgb-split') {
+        if (selectedEffect === 'rgb-split' && isWithinClassicTime) {
             const offset = rgbSplitAmount;
             rgbOffset = `translate(${Math.sin(performance.now() / 150) * offset * 0.4}px, ${Math.cos(performance.now() / 180) * offset * 0.25}px) `;
         }
 
         let glitchOffset = '';
-        if (selectedEffect === 'glitch') {
+        if (selectedEffect === 'glitch' && isWithinClassicTime) {
             const t = performance.now() / 130;
             const x = Math.sin(t * 25) * 2.5;
             const y = Math.cos(t * 31) * 1.8;
@@ -2412,6 +2471,134 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const [rgbSplitAmount, setRgbSplitAmount] = useState(12);
     const [smoothZoomAmount, setSmoothZoomAmount] = useState(0.35);
     const [filmGrainOpacity, setFilmGrainOpacity] = useState(0.4);
+    const [stackedEffects, setStackedEffects] = useState<any[]>([]);
+    const [classicStartTime, setClassicStartTime] = useState<number>(0);
+    const [classicEndTime, setClassicEndTime] = useState<number>(5);
+    const [proEffectsTab, setProEffectsTab] = useState<'classic' | 'pro'>('pro');
+    const [proSearchQuery, setProSearchQuery] = useState('');
+    const [proCategoryFilter, setProCategoryFilter] = useState<'all' | 'camera' | 'blur' | 'glitch' | 'cinematic' | 'distortion'>('all');
+    const [proShowFavorites, setProShowFavorites] = useState(false);
+    const [proFavorites, setProFavorites] = useState<string[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem('veytrix_pro_favorites') || '[]');
+        } catch (e) {
+            return [];
+        }
+    });
+    const [proRecentlyUsed, setProRecentlyUsed] = useState<string[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem('veytrix_pro_recents') || '[]');
+        } catch (e) {
+            return [];
+        }
+    });
+    const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+    const [proContextMenu, setProContextMenu] = useState<{
+        x: number;
+        y: number;
+        effectId: string;
+    } | null>(null);
+    const [expandedAdjustmentId, setExpandedAdjustmentId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const handleGlobalClick = () => {
+            setProContextMenu(null);
+        };
+        window.addEventListener('click', handleGlobalClick);
+        return () => window.removeEventListener('click', handleGlobalClick);
+    }, []);
+
+    const applyEffectToAllClips = (eff: any) => {
+        const nextSettings = { ...clipSettings };
+        mediaItems.forEach(item => {
+            const current = nextSettings[item.id] || {};
+            const stacked = current.stackedEffects || [];
+            if (!stacked.some((e: any) => e.id === eff.id)) {
+                nextSettings[item.id] = {
+                    ...current,
+                    stackedEffects: [
+                        ...stacked,
+                        {
+                            id: eff.id,
+                            params: { ...eff.defaultParameters },
+                            enabled: true,
+                            startTime: 0,
+                            endTime: item.duration || 10
+                        }
+                    ]
+                };
+            }
+        });
+        setClipSettings(nextSettings);
+        if (activePreviewId) {
+            const activeStacked = nextSettings[activePreviewId]?.stackedEffects || [];
+            setStackedEffects(activeStacked);
+        }
+    };
+
+    const applyEffectToCurrentClip = (eff: any) => {
+        if (eff.isClassic) {
+            setSelectedEffect(eff.id);
+        } else {
+            if (!stackedEffects.some(e => e.id === eff.id)) {
+                const activeItem = mediaItems.find(i => i.id === activePreviewId);
+                const nextStacked = [
+                    ...stackedEffects,
+                    {
+                        id: eff.id,
+                        params: { ...eff.defaultParameters },
+                        enabled: true,
+                        startTime: 0,
+                        endTime: activeItem?.duration || 10
+                    }
+                ];
+                setStackedEffects(nextStacked);
+                if (activePreviewId) {
+                    setClipSettings(prev => ({
+                        ...prev,
+                        [activePreviewId]: {
+                            ...(prev[activePreviewId] || {}),
+                            stackedEffects: nextStacked
+                        }
+                    }));
+                }
+            }
+        }
+    };
+
+    const getUnifiedEffects = () => {
+        const classicEffects = [
+            { id: 'fade-in', name: 'Fade In', category: 'cinematic', description: 'Smooth fade-in from black.', icon: Sunrise, isClassic: true },
+            { id: 'velocity', name: 'Velocity Speed', category: 'camera', description: 'Adjust clip playback velocity dynamically.', icon: Zap, isClassic: true, params: [{ key: 'velocitySpeed', name: 'Velocity Speed', min: 0.1, max: 4.0, step: 0.1, value: velocitySpeed, setter: setVelocitySpeed }] },
+            { id: 'motion-blur', name: 'Motion Blur', category: 'blur', description: 'Add realistic motion blur based on movement.', icon: Wind, isClassic: true, params: [{ key: 'motionBlurAmount', name: 'Motion Blur Amount', min: 1, max: 15, step: 1, value: motionBlurAmount, setter: setMotionBlurAmount }] },
+            { id: 'shake', name: 'Camera Shake', category: 'camera', description: 'Simulate cinematic camera shake.', icon: Vibrate, isClassic: true, params: [{ key: 'shakeStrength', name: 'Shake Strength', min: 0.1, max: 5.0, step: 0.1, value: shakeStrength, setter: setShakeStrength }] },
+            { id: 'flash-effect', name: 'Camera Flash', category: 'camera', description: 'Quick white light flash burst.', icon: Zap, isClassic: true, params: [{ key: 'flashIntensity', name: 'Flash Intensity', min: 0.1, max: 2.0, step: 0.1, value: flashIntensity, setter: setFlashIntensity }] },
+            { id: 'rgb-split', name: 'RGB Split', category: 'glitch', description: 'Separate red, green, and blue color channels.', icon: Palette, isClassic: true, params: [{ key: 'rgbSplitAmount', name: 'RGB Split Amount', min: 1, max: 50, step: 1, value: rgbSplitAmount, setter: setRgbSplitAmount }] },
+            { id: 'film-grain', name: 'Film Grain', category: 'cinematic', description: 'Add vintage retro film noise.', icon: Film, isClassic: true, params: [{ key: 'filmGrainOpacity', name: 'Film Grain Opacity', min: 0.0, max: 1.0, step: 0.05, value: filmGrainOpacity, setter: setFilmGrainOpacity }] },
+            { id: 'soft-glow', name: 'Soft Glow', category: 'cinematic', description: 'Add a soft dreamy glow effect.', icon: Sparkles, isClassic: true },
+            { id: 'old-tv', name: 'Old TV', category: 'glitch', description: 'Vintage CRT television simulator.', icon: Tv, isClassic: true },
+            { id: 'slow-motion', name: 'Slow Motion', category: 'camera', description: 'Smooth slow-motion speed modification.', icon: Clock3, isClassic: true, params: [{ key: 'slowMotionSpeed', name: 'Slow Motion Speed', min: 0.05, max: 0.95, step: 0.05, value: slowMotionSpeed, setter: setSlowMotionSpeed }] },
+            { id: 'smooth-zoom', name: 'Smooth Zoom', category: 'camera', description: 'Cinematic camera zoom in/out.', icon: ZoomIn, isClassic: true, params: [{ key: 'smoothZoomAmount', name: 'Smooth Zoom Amount', min: 0.05, max: 2.0, step: 0.05, value: smoothZoomAmount, setter: setSmoothZoomAmount }] },
+            { id: 'glitch', name: 'Glitch lines', category: 'glitch', description: 'Digital glitch lines and artifacts.', icon: ScanLine, isClassic: true, params: [{ key: 'glitchIntensity', name: 'Glitch Intensity', min: 0.1, max: 5.0, step: 0.1, value: glitchIntensity, setter: setGlitchIntensity }] },
+            { id: 'motion-tracking', name: 'Motion Tracking', category: 'camera', description: 'Motion-tracking overlay marker.', icon: Crosshair, isClassic: true },
+        ];
+
+        const proEffects = getAllProEffects().map(pe => ({
+            id: pe.id,
+            name: pe.name,
+            category: pe.category,
+            description: pe.description,
+            icon: pe.icon,
+            isClassic: false,
+            defaultParameters: pe.defaultParameters,
+            adjustableParameters: pe.adjustableParameters
+        }));
+
+        return [...classicEffects, ...proEffects].map(eff => ({
+            ...eff,
+            icon: EFFECT_ICONS[eff.id] || eff.icon || Ban
+        }));
+    };
     const [animatedText, setAnimatedText] = useState('');
 
     // --- Caption state ---
@@ -2769,9 +2956,14 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         setRgbSplitAmount(settings.rgbSplitAmount ?? 12);
         setSmoothZoomAmount(settings.smoothZoomAmount ?? 0.35);
         setFilmGrainOpacity(settings.filmGrainOpacity ?? 0.4);
+        setStackedEffects(settings.stackedEffects || []);
+
+        const activeItem = mediaItems.find(i => i.id === activePreviewId);
+        const videoDuration = activeItem?.duration || 10;
+        setClassicStartTime(settings.classicStartTime ?? 0);
+        setClassicEndTime(settings.classicEndTime ?? videoDuration);
 
         // Clear pending seek offset if active clip is an image and we are paused
-        const activeItem = mediaItems.find(i => i.id === activePreviewId);
         if (!isPlaying && activeItem?.type === 'image') {
             if (pendingTransitionSeekRef.current && pendingTransitionSeekRef.current.clipId === activePreviewId) {
                 pendingTransitionSeekRef.current = null;
@@ -2825,7 +3017,10 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                 current.flashIntensity === flashIntensity &&
                 current.rgbSplitAmount === rgbSplitAmount &&
                 current.smoothZoomAmount === smoothZoomAmount &&
-                current.filmGrainOpacity === filmGrainOpacity
+                current.filmGrainOpacity === filmGrainOpacity &&
+                current.classicStartTime === classicStartTime &&
+                current.classicEndTime === classicEndTime &&
+                JSON.stringify(current.stackedEffects || []) === JSON.stringify(stackedEffects)
             ) {
                 return prev;
             }
@@ -2867,6 +3062,9 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     rgbSplitAmount,
                     smoothZoomAmount,
                     filmGrainOpacity,
+                    classicStartTime,
+                    classicEndTime,
+                    stackedEffects,
                 }
             };
         });
@@ -2906,6 +3104,9 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         rgbSplitAmount,
         smoothZoomAmount,
         filmGrainOpacity,
+        classicStartTime,
+        classicEndTime,
+        stackedEffects,
     ]);
 
 
@@ -2947,6 +3148,9 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         // Keep next-clip fallback so existing assignments still work.
         const transitionType = clipTransitions[activePreviewId] || clipTransitions[nextId] || 'none';
         if (transitionType === 'none') {
+            if (videoRef.current) {
+                videoRef.current.pause();
+            }
             setActivePreviewId(nextId);
             return;
         }
@@ -2993,10 +3197,21 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             triggerClipTransition(nextId);
             setIsPlaying(true);
         } else {
-            console.log("📹 [PLAYBACK] No more clips to play");
+            console.log("📹 [PLAYBACK] No more clips to play, resetting to beginning of first clip");
             setIsPlaying(false);
+            if (mediaItems.length > 0) {
+                const firstClip = mediaItems[0];
+                setActivePreviewId(firstClip.id);
+                setProgress(0);
+                setTimeout(() => {
+                    if (videoRef.current && firstClip.type === 'video') {
+                        const trim = getTrimRangeForItem(firstClip.id, firstClip.duration);
+                        videoRef.current.currentTime = trim.start;
+                    }
+                }, 50);
+            }
         }
-    }, [activePreviewId, mediaItems, triggerClipTransition]);
+    }, [activePreviewId, mediaItems, triggerClipTransition, setActivePreviewId, setProgress, getTrimRangeForItem]);
 
     const togglePlay = () => {
         console.log("📹 [PLAYBACK] togglePlay called, current isPlaying:", isPlaying);
@@ -3032,7 +3247,14 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         }
     };
 
-    const handleTimeUpdate = () => {
+    const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        const videoElement = e.currentTarget;
+        const eventClipId = videoElement.getAttribute('data-clip-id');
+        if (eventClipId && eventClipId !== activePreviewId) {
+            console.log("📹 [PLAYBACK] handleTimeUpdate ignored because it came from a stale clip:", eventClipId, "current active:", activePreviewId);
+            return;
+        }
+
         if (videoRef.current && mediaItems.length > 0) {
             const activeIndex = mediaItems.findIndex(i => i.id === activePreviewId);
             if (activeIndex < 0) return; // Safety check
@@ -3286,8 +3508,8 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const overlayTextStylePresetCss = getOverlayTextStylePresetCss(overlayTextStylePreset);
 
     useEffect(() => {
-        const activeCanvasMode = CANVAS_PREVIEW_EFFECTS.includes(selectedEffect)
-            ? selectedEffect
+        const activeCanvasMode = (CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || (stackedEffects && stackedEffects.some(e => e.enabled)))
+            ? (CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) ? selectedEffect : 'stacked-effects')
             : CANVAS_PREVIEW_FILTERS.includes(selectedFilter)
                 ? selectedFilter
                 : null;
@@ -3315,8 +3537,11 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     canvas.height = video.videoHeight;
                 }
 
+                const tVal = video.currentTime;
+                const isWithinClassicTime = tVal >= classicStartTime && tVal <= classicEndTime;
+
                 ctx.save();
-                if (activeCanvasMode === 'shake') {
+                if (activeCanvasMode === 'shake' && isWithinClassicTime) {
                     const strength = typeof shakeStrength !== 'undefined' ? shakeStrength : 1.5;
                     const t = performance.now() / 1000;
                     const x = Math.sin(t * 22) * strength * 4.5;
@@ -3341,7 +3566,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     ctx.putImageData(imageData, 0, 0);
                 }
 
-                if (activeCanvasMode === 'glitch') {
+                if (activeCanvasMode === 'glitch' && isWithinClassicTime) {
                     for (let i = 0; i < glitchIntensity * 30; i++) {
                         const x = (Math.sin(Date.now() * 0.01 + i) + 1) * canvas.width * 0.5;
                         const y = Math.random() * canvas.height;
@@ -3350,7 +3575,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     }
                 }
 
-                if (activeCanvasMode === 'vintage') {
+                if (activeCanvasMode === 'vintage' && isWithinClassicTime) {
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
 
@@ -3373,7 +3598,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     ctx.putImageData(imageData, 0, 0);
                 }
 
-                if (activeCanvasMode === 'soft-glow') {
+                if (activeCanvasMode === 'soft-glow' && isWithinClassicTime) {
                     ctx.save();
                     ctx.globalAlpha = 0.45;
                     ctx.filter = 'blur(6px) brightness(1.2)';
@@ -3382,7 +3607,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     ctx.restore();
                 }
 
-                if (activeCanvasMode === 'retro-film') {
+                if (activeCanvasMode === 'retro-film' && isWithinClassicTime) {
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
 
@@ -3523,7 +3748,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     ctx.putImageData(imageData, 0, 0);
                 }
 
-                if (activeCanvasMode === 'motion-tracking') {
+                if (activeCanvasMode === 'motion-tracking' && isWithinClassicTime) {
                     const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     if (previousFrameRef.current) {
                         const currentData = currentFrame.data;
@@ -3544,6 +3769,33 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     }
                     previousFrameRef.current = currentFrame;
                 }
+
+                // Apply stacked professional effects pack
+                const activeStacked = (stackedEffects || []).filter(eff => eff.enabled);
+                if (activeStacked.length > 0) {
+                    const t = video.currentTime;
+                    const bufferCanvas = document.createElement('canvas');
+                    bufferCanvas.width = canvas.width;
+                    bufferCanvas.height = canvas.height;
+                    const bufferCtx = bufferCanvas.getContext('2d');
+
+                    if (bufferCtx) {
+                        activeStacked.forEach((eff) => {
+                            const mod = getEffectModule(eff.id);
+                            if (mod) {
+                                const startTime = eff.startTime ?? 0;
+                                const endTime = eff.endTime ?? video.duration ?? 9999;
+                                if (t >= startTime && t <= endTime) {
+                                    bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
+                                    bufferCtx.drawImage(canvas, 0, 0);
+
+                                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                    mod.previewRenderer(ctx, bufferCanvas as any, eff.params, t, canvas);
+                                }
+                            }
+                        });
+                    }
+                }
             }
 
             if (isPlaying) {
@@ -3551,9 +3803,19 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             }
         };
 
+        const handleVideoFrameChange = () => {
+            if (!isPlaying) {
+                drawGreenScreen();
+            }
+        };
+        video.addEventListener('seeked', handleVideoFrameChange);
+        video.addEventListener('timeupdate', handleVideoFrameChange);
+
         drawGreenScreen();
 
         return () => {
+            video.removeEventListener('seeked', handleVideoFrameChange);
+            video.removeEventListener('timeupdate', handleVideoFrameChange);
             if (greenScreenAnimationRef.current !== null) {
                 cancelAnimationFrame(greenScreenAnimationRef.current);
                 greenScreenAnimationRef.current = null;
@@ -3569,6 +3831,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         shakeStrength,
         rgbSplitAmount,
         filmGrainOpacity,
+        stackedEffects,
     ]);
 
     // Keep timeline thumbnail videos in sync with the main preview transport state.
@@ -3684,9 +3947,33 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     useEffect(() => {
         if (location.state && typeof location.state === 'object') {
             const state = location.state as any;
-            const { initialMedia, initialAudio } = state;
-
-            if (initialMedia && (initialMedia.file || initialMedia.preview)) {
+            const { initialMedia, initialAudio, initialMedias } = state;
+            
+            if (initialMedias && initialMedias.length > 0) {
+                Promise.all(initialMedias.map(async (mediaItem, idx) => {
+                    const preview = mediaItem.file
+                        ? URL.createObjectURL(mediaItem.file)
+                        : mediaItem.preview;
+                    if (mediaItem.file && preview) {
+                        createdPreviewUrlsRef.current.push(preview);
+                    }
+                    const itemType = mediaItem.type || ('video' as const);
+                    const resolvedDuration = await getMediaDurationFromPreview(preview, itemType);
+                    return {
+                        id: `initial-${idx}-${Math.random().toString(36).substr(2, 9)}`,
+                        file: mediaItem.file || null,
+                        preview,
+                        type: itemType as 'video' | 'image',
+                        duration: resolvedDuration,
+                    };
+                })).then((items) => {
+                    setMediaItems(items);
+                    setLibraryAssets(items);
+                    setActivePreviewId(items[0].id);
+                    setHistory([JSON.stringify(items)]);
+                    setHistoryIndex(0);
+                });
+            } else if (initialMedia && (initialMedia.file || initialMedia.preview)) {
                 const preview = initialMedia.file
                     ? URL.createObjectURL(initialMedia.file)
                     : initialMedia.preview;
@@ -3705,6 +3992,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                         duration: resolvedDuration,
                     };
                     setMediaItems([newItem]);
+                    setLibraryAssets([newItem]);
                     setActivePreviewId('initial');
                     // Initialize undo history with initial state
                     setHistory([JSON.stringify([newItem])]);
@@ -3740,6 +4028,10 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
 
     const getPreviewCssFilter = () => {
+        if (videoRef.current) {
+            const t = videoRef.current.currentTime;
+            if (t < classicStartTime || t > classicEndTime) return 'none';
+        }
         if (selectedEffect === 'blur') return `blur(${blurAmount}px)`;
         if (selectedEffect === 'color-correction') return `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
         if (selectedEffect === 'motion-blur') return `blur(${motionBlurAmount}px) brightness(1.05)`;
@@ -3753,6 +4045,10 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     };
 
     const getPreviewFilterCss = () => {
+        if (videoRef.current && (selectedEffect === 'black-white' || selectedEffect === 'cinematic' || selectedEffect === 'warm' || selectedEffect === 'cool' || selectedEffect === 'sepia' || selectedEffect === 'hdr' || selectedEffect === 'vivid')) {
+            const t = videoRef.current.currentTime;
+            if (t < classicStartTime || t > classicEndTime) return 'none';
+        }
         if (selectedEffect === 'black-white') return 'grayscale(1)';
         if (selectedEffect === 'cinematic') return 'contrast(1.4) brightness(1.1) saturate(1.2)';
         if (selectedEffect === 'warm') return 'sepia(0.22) saturate(1.15) hue-rotate(-10deg)';
@@ -4157,6 +4453,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     duration: item.duration,
                     effect: settings.selectedEffect || 'none',
                     filter: settings.selectedFilter || 'none',
+                    stackedEffects: settings.stackedEffects || [],
                     effectSettings: {
                         blurAmount: settings.blurAmount ?? 10,
                         brightness: settings.brightness ?? 1,
@@ -4308,6 +4605,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     filter: item.filter,
                     effectSettings: item.effectSettings,
                     textOverlay: item.textOverlay,
+                    stackedEffects: item.stackedEffects,
                 })),
                 count: mediaForProcessing.length,
             },
@@ -4685,45 +4983,522 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                                         {/* ── EFFECTS panel ── */}
                                         {leftTab === 'effects' && (
-                                            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {[
-                                                        { id: 'none',            label: 'No Effect',        icon: Ban,       color: '#94a3b8' },
-                                                        { id: 'fade-in',         label: 'Fade In',          icon: Sunrise,   color: '#fbbf24' },
-                                                        { id: 'velocity',        label: 'Velocity',         icon: Zap,       color: '#f59e0b' },
-                                                        { id: 'motion-blur',     label: 'Motion Blur',      icon: Wind,      color: '#c084fc' },
-                                                        { id: 'shake',           label: 'Shake',            icon: Vibrate,   color: '#60a5fa' },
-                                                        { id: 'flash-effect',    label: 'Flash',            icon: Zap,       color: '#facc15' },
-                                                        { id: 'rgb-split',       label: 'RGB Split',        icon: Palette,   color: '#f472b6' },
-                                                        { id: 'film-grain',      label: 'Film Grain',       icon: Film,      color: '#a78bfa' },
-                                                        { id: 'soft-glow',       label: 'Soft Glow',        icon: Sparkles,  color: '#e879f9' },
-                                                        { id: 'old-tv',          label: 'Old TV',           icon: Tv,        color: '#34d399' },
-                                                        { id: 'slow-motion',     label: 'Slow Mo',          icon: Clock3,    color: '#38bdf8' },
-                                                        { id: 'smooth-zoom',     label: 'Smooth Zoom',      icon: ZoomIn,    color: '#fb923c' },
-                                                        { id: 'glitch',          label: 'Glitch',           icon: ScanLine,  color: '#f87171' },
-                                                        { id: 'motion-tracking', label: 'Tracking',         icon: Crosshair, color: '#4ade80' },
-                                                    ].map((eff) => {
-                                                        const isActive = selectedEffect === eff.id;
-                                                        const Icon = eff.icon;
-                                                        return (
-                                                            <button
-                                                                key={eff.id}
-                                                                onClick={() => setSelectedEffect(eff.id as any)}
-                                                                type="button"
-                                                                className={`relative flex flex-col items-center justify-center gap-2 h-[80px] rounded-xl border transition-all duration-200 group overflow-hidden ${
-                                                                    isActive
-                                                                        ? 'bg-purple-500/15 border-purple-400/60 shadow-[0_0_16px_rgba(168,85,247,0.25)] scale-[1.02]'
-                                                                        : 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5'
-                                                                }`}
-                                                            >
-                                                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 40%, ${eff.color}18 0%, transparent 70%)` }} />
-                                                                <Icon size={20} className="relative z-10 transition-transform duration-200 group-hover:scale-110" style={{ color: isActive ? '#c084fc' : eff.color }} />
-                                                                <span className={`relative z-10 text-[8px] font-bold uppercase tracking-wider text-center leading-tight px-1 line-clamp-2 ${isActive ? 'text-purple-200' : 'text-slate-400 group-hover:text-slate-200'}`}>{eff.label}</span>
-                                                                {isActive && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-purple-400" />}
-                                                            </button>
-                                                        );
-                                                    })}
+                                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                                                <div className="flex-1 flex flex-col min-h-0 p-3 space-y-3 overflow-hidden">
+                                                    {/* Search Bar & Filters */}
+                                                    <div className="space-y-2 shrink-0">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="text"
+                                                                value={proSearchQuery}
+                                                                onChange={e => setProSearchQuery(e.target.value)}
+                                                                placeholder="Search effects..."
+                                                                className="w-full pl-7 pr-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[9px] font-bold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
+                                                            />
+                                                            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                                                        </div>
+
+                                                        {/* Category Filter Chips */}
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {['all', 'camera', 'blur', 'glitch', 'cinematic', 'distortion'].map((cat) => (
+                                                                <button
+                                                                    key={cat}
+                                                                    onClick={() => setProCategoryFilter(cat as any)}
+                                                                    className={`px-2 py-0.5 rounded-full text-[7.5px] font-bold uppercase border transition-all cursor-pointer ${
+                                                                        proCategoryFilter === cat
+                                                                            ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
+                                                                            : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'
+                                                                    }`}
+                                                                >
+                                                                    {cat}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Favorites Filter Switch */}
+                                                        <div className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.02] border border-white/5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-wider">Favorites Only</span>
+                                                            </div>
+                                                            <Switch
+                                                                checked={proShowFavorites}
+                                                                onCheckedChange={setProShowFavorites}
+                                                                className="scale-50 data-[state=checked]:bg-purple-500"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Effects List */}
+                                                    <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-500/20 [&::-webkit-scrollbar-thumb]:rounded-full">
+                                                        {/* Collapsible Categories */}
+                                                        {['camera', 'blur', 'glitch', 'cinematic', 'distortion'].map(category => {
+                                                            if (proCategoryFilter !== 'all' && proCategoryFilter !== category) return null;
+                                                            
+                                                            // Filter effects for this category
+                                                            const effectsInCategory = getUnifiedEffects().filter((eff: any) => {
+                                                                if (eff.category !== category) return false;
+                                                                if (proSearchQuery.trim().length > 0 && !eff.name.toLowerCase().includes(proSearchQuery.toLowerCase())) return false;
+                                                                if (proShowFavorites && !proFavorites.includes(eff.id)) return false;
+                                                                return true;
+                                                            });
+
+                                                            if (effectsInCategory.length === 0) return null;
+                                                            const isCollapsed = collapsedCategories[category];
+                                                            const CategoryIcon = category === 'camera' ? Camera : category === 'blur' ? Wind : category === 'glitch' ? Tv : category === 'cinematic' ? Film : Waves;
+
+                                                            return (
+                                                                <div key={category} className="border border-white/5 rounded-xl overflow-hidden bg-black/10">
+                                                                    {/* Header */}
+                                                                    <button
+                                                                        onClick={() => setCollapsedCategories(prev => ({ ...prev, [category]: !prev[category] }))}
+                                                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-white/[0.02] hover:bg-white/[0.04] transition-all text-left cursor-pointer"
+                                                                    >
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <CategoryIcon className="w-3.5 h-3.5 text-purple-400" />
+                                                                            <span className="text-[8px] font-black uppercase tracking-wider text-slate-300">{category}</span>
+                                                                            <span className="text-[7.5px] text-slate-500">({effectsInCategory.length})</span>
+                                                                        </div>
+                                                                        <ChevronRight className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} />
+                                                                    </button>
+
+                                                                    {/* Effects Grid */}
+                                                                    {!isCollapsed && (
+                                                                        <div className="p-2 grid grid-cols-1 gap-2 bg-black/20">
+                                                                            {effectsInCategory.map((eff: any) => {
+                                                                                const isFav = proFavorites.includes(eff.id);
+                                                                                const isApplied = eff.isClassic 
+                                                                                    ? (selectedEffect === eff.id) 
+                                                                                    : stackedEffects.some(e => e.id === eff.id);
+                                                                                return (
+                                                                                    <div
+                                                                                        key={eff.id}
+                                                                                        onContextMenu={(e) => {
+                                                                                            e.preventDefault();
+                                                                                            setProContextMenu({
+                                                                                                x: e.clientX,
+                                                                                                y: e.clientY,
+                                                                                                effectId: eff.id
+                                                                                            });
+                                                                                        }}
+                                                                                        className="flex gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all group select-none cursor-context-menu"
+                                                                                    >
+                                                                                        {/* Thumbnail */}
+                                                                                        <div className="w-[45px] h-[45px] rounded-lg overflow-hidden shrink-0 border border-white/10 relative bg-purple-950/20 flex items-center justify-center">
+                                                                                            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-teal-500/20 mix-blend-overlay" />
+                                                                                            <eff.icon className="w-4 h-4 text-purple-300" />
+                                                                                        </div>
+
+                                                                                        {/* Details */}
+                                                                                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                                                                            <div className="flex items-start justify-between gap-1">
+                                                                                                <span className="text-[9px] font-bold text-white leading-tight truncate">{eff.name}</span>
+                                                                                                <button
+                                                                                                    onClick={() => {
+                                                                                                        const nextFavs = isFav ? proFavorites.filter(id => id !== eff.id) : [...proFavorites, eff.id];
+                                                                                                        setProFavorites(nextFavs);
+                                                                                                        localStorage.setItem('veytrix_pro_favorites', JSON.stringify(nextFavs));
+                                                                                                    }}
+                                                                                                    className="text-slate-500 hover:text-yellow-400 transition-colors cursor-pointer"
+                                                                                                >
+                                                                                                    <Star className={`w-3.5 h-3.5 ${isFav ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                                                                                                </button>
+                                                                                            </div>
+                                                                                            <span className="text-[7.5px] text-slate-400 line-clamp-1 leading-snug mb-1">{eff.description}</span>
+                                                                                            <button
+                                                                                                onClick={() => {
+                                                                                                    if (eff.isClassic) {
+                                                                                                        setSelectedEffect(isApplied ? 'none' : eff.id);
+                                                                                                    } else {
+                                                                                                        if (isApplied) {
+                                                                                                            setStackedEffects(prev => prev.filter(e => e.id !== eff.id));
+                                                                                                        } else {
+                                                                                                            setStackedEffects(prev => [
+                                                                                                                ...prev,
+                                                                                                                {
+                                                                                                                    id: eff.id,
+                                                                                                                    params: { ...eff.defaultParameters },
+                                                                                                                    enabled: true
+                                                                                                                }
+                                                                                                            ]);
+                                                                                                            const nextRecents = [eff.id, ...proRecentlyUsed.filter(id => id !== eff.id)].slice(0, 5);
+                                                                                                            setProRecentlyUsed(nextRecents);
+                                                                                                            localStorage.setItem('veytrix_pro_recents', JSON.stringify(nextRecents));
+                                                                                                        }
+                                                                                                    }
+                                                                                                }}
+                                                                                                className={`w-full py-1 rounded-lg text-[8px] font-bold uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                                                                                    isApplied
+                                                                                                        ? 'bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30'
+                                                                                                        : 'bg-purple-500 text-white hover:bg-purple-600'
+                                                                                                }`}
+                                                                                            >
+                                                                                                {isApplied ? 'Remove Effect' : 'Apply Effect'}
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
+                                                {/* Applied Effects Adjustment Stack */}
+                                                {(selectedEffect !== 'none' || stackedEffects.length > 0) && (
+                                                    <div className="shrink-0 max-h-[280px] flex flex-col border-t border-white/5 bg-black/40 p-2.5 space-y-2.5 overflow-hidden select-none">
+                                                        <div className="text-[8px] font-black uppercase tracking-widest text-slate-400 shrink-0">
+                                                            Applied Effects Adjustment Stack
+                                                        </div>
+
+                                                        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
+                                                            {/* 1. Classic Effect Card (if selected) */}
+                                                            {(() => {
+                                                                const activeClassic = getUnifiedEffects().find(e => e.isClassic && e.id === selectedEffect) as any;
+                                                                if (!activeClassic) return null;
+                                                                const isExpanded = expandedAdjustmentId === activeClassic.id;
+                                                                const hasParams = activeClassic.params && activeClassic.params.length > 0;
+                                                                const activeItem = mediaItems.find(i => i.id === activePreviewId);
+                                                                const videoDuration = activeItem?.duration || 10;
+                                                                return (
+                                                                    <div className="border border-white/5 rounded-xl overflow-hidden bg-white/[0.01] hover:bg-white/[0.02] transition-colors duration-200">
+                                                                        {/* Header */}
+                                                                        <div
+                                                                            onClick={() => {
+                                                                                setExpandedAdjustmentId(prev => prev === activeClassic.id ? null : activeClassic.id);
+                                                                            }}
+                                                                            className="p-2 flex items-center justify-between gap-2 cursor-pointer select-none"
+                                                                            title={`Configure ${activeClassic.name}`}
+                                                                        >
+                                                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                                <div className="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 hover:scale-105 hover:shadow-[0_0_8px_rgba(168,85,247,0.4)] transition-all duration-200">
+                                                                                    <activeClassic.icon className="w-3.5 h-3.5" />
+                                                                                </div>
+                                                                                <span className="text-[8.5px] font-bold text-white truncate" title={activeClassic.name}>
+                                                                                    {activeClassic.name}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                                                {/* Reset button */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        activeClassic.params?.forEach((p: any) => p.setter(p.min + (p.max - p.min) / 2));
+                                                                                        setClassicStartTime(0);
+                                                                                        setClassicEndTime(videoDuration);
+                                                                                    }}
+                                                                                    className="p-1 rounded bg-white/5 border border-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                                                                    title="Reset Settings & Time"
+                                                                                >
+                                                                                    <RefreshCw className="w-2.5 h-2.5" />
+                                                                                </button>
+
+                                                                                {/* Delete button */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedEffect('none');
+                                                                                        if (expandedAdjustmentId === activeClassic.id) {
+                                                                                            setExpandedAdjustmentId(null);
+                                                                                        }
+                                                                                    }}
+                                                                                    className="p-1 rounded bg-white/5 border border-white/5 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                                                                                    title="Remove Effect"
+                                                                                >
+                                                                                    <Trash2 className="w-2.5 h-2.5" />
+                                                                                </button>
+
+                                                                                {/* Expand chevron */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setExpandedAdjustmentId(prev => prev === activeClassic.id ? null : activeClassic.id);
+                                                                                    }}
+                                                                                    className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                                                                >
+                                                                                    {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Parameters Expansion with Framer Motion */}
+                                                                        <AnimatePresence initial={false}>
+                                                                            {isExpanded && (
+                                                                                <motion.div
+                                                                                    initial={{ height: 0, opacity: 0 }}
+                                                                                    animate={{ height: "auto", opacity: 1 }}
+                                                                                    exit={{ height: 0, opacity: 0 }}
+                                                                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                                                                    className="border-t border-white/5 bg-black/20 p-2.5 space-y-2.5 overflow-hidden"
+                                                                                >
+                                                                                    {hasParams && activeClassic.params.map((param: any) => (
+                                                                                        <div key={param.key} className="space-y-1">
+                                                                                            <div className="flex justify-between text-[7px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                                                <span>{param.name}</span>
+                                                                                                <span className="font-mono text-purple-400">
+                                                                                                    {param.value.toFixed(2)}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <input
+                                                                                                type="range"
+                                                                                                min={param.min}
+                                                                                                max={param.max}
+                                                                                                step={param.step}
+                                                                                                value={param.value}
+                                                                                                onChange={e => {
+                                                                                                    param.setter(Number(e.target.value));
+                                                                                                }}
+                                                                                                className="w-full accent-purple-500 h-1 bg-white/10 rounded-full cursor-pointer"
+                                                                                            />
+                                                                                        </div>
+                                                                                    ))}
+                                                                                    {/* Time Duration Controls */}
+                                                                                    <div className="grid grid-cols-2 gap-2 mt-1 pt-2 border-t border-white/5">
+                                                                                        <div className="space-y-1">
+                                                                                            <div className="flex justify-between text-[7px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                                                <span>Start Time (s)</span>
+                                                                                                <span className="font-mono text-amber-400">{classicStartTime.toFixed(1)}s</span>
+                                                                                            </div>
+                                                                                            <input
+                                                                                                type="range"
+                                                                                                min={0}
+                                                                                                max={videoDuration}
+                                                                                                step={0.1}
+                                                                                                value={classicStartTime}
+                                                                                                onChange={e => setClassicStartTime(Number(e.target.value))}
+                                                                                                className="w-full accent-amber-500 h-1 bg-white/10 rounded-full cursor-pointer"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="space-y-1">
+                                                                                            <div className="flex justify-between text-[7px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                                                <span>End Time (s)</span>
+                                                                                                <span className="font-mono text-amber-400">{classicEndTime.toFixed(1)}s</span>
+                                                                                            </div>
+                                                                                            <input
+                                                                                                type="range"
+                                                                                                min={0}
+                                                                                                max={videoDuration}
+                                                                                                step={0.1}
+                                                                                                value={classicEndTime}
+                                                                                                onChange={e => setClassicEndTime(Number(e.target.value))}
+                                                                                                className="w-full accent-amber-500 h-1 bg-white/10 rounded-full cursor-pointer"
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </motion.div>
+                                                                            )}
+                                                                        </AnimatePresence>
+                                                                    </div>
+                                                                );
+                                                            })()}
+
+                                                            {/* 2. Pro Stacked Effects Card (Draggable and Reorderable) */}
+                                                            {stackedEffects.length > 0 && (
+                                                                <Reorder.Group
+                                                                    axis="y"
+                                                                    values={stackedEffects}
+                                                                    onReorder={(newOrder) => {
+                                                                        setStackedEffects(newOrder);
+                                                                        if (activePreviewId) {
+                                                                            setClipSettings(prev => ({
+                                                                                ...prev,
+                                                                                [activePreviewId]: {
+                                                                                    ...(prev[activePreviewId] || {}),
+                                                                                    stackedEffects: newOrder
+                                                                                }
+                                                                            }));
+                                                                        }
+                                                                    }}
+                                                                    className="space-y-2"
+                                                                >
+                                                                    {stackedEffects.map((applied, idx) => {
+                                                                        const mod = getEffectModule(applied.id);
+                                                                        if (!mod) return null;
+                                                                        const itemKey = applied.id + '_' + idx;
+                                                                        const isExpanded = expandedAdjustmentId === itemKey;
+                                                                        const hasParams = mod.adjustableParameters && mod.adjustableParameters.length > 0;
+                                                                        const IconComponent = EFFECT_ICONS[applied.id] || mod.icon || Ban;
+                                                                        const activeItem = mediaItems.find(i => i.id === activePreviewId);
+                                                                        const videoDuration = activeItem?.duration || 10;
+
+                                                                        return (
+                                                                            <Reorder.Item
+                                                                                key={itemKey}
+                                                                                value={applied}
+                                                                                className="border border-white/5 rounded-xl overflow-hidden bg-white/[0.01] hover:bg-white/[0.02] transition-colors duration-200"
+                                                                            >
+                                                                                {/* Header */}
+                                                                                <div
+                                                                                    onClick={() => {
+                                                                                        setExpandedAdjustmentId(prev => prev === itemKey ? null : itemKey);
+                                                                                    }}
+                                                                                    className="p-2 flex items-center justify-between gap-2 cursor-pointer select-none"
+                                                                                    title={`Configure ${mod.name}`}
+                                                                                >
+                                                                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                                        <div className="text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing p-0.5" onClick={e => e.stopPropagation()}>
+                                                                                            <GripVertical className="w-3.5 h-3.5" />
+                                                                                        </div>
+                                                                                        <div className="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 hover:scale-105 hover:shadow-[0_0_8px_rgba(168,85,247,0.4)] transition-all duration-200">
+                                                                                            <IconComponent className="w-3.5 h-3.5" />
+                                                                                        </div>
+                                                                                        <span className="text-[8.5px] font-bold text-white truncate" title={mod.name}>
+                                                                                            {mod.name}
+                                                                                        </span>
+                                                                                    </div>
+
+                                                                                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                                                        <Switch
+                                                                                            checked={applied.enabled}
+                                                                                            onCheckedChange={(checked) => {
+                                                                                                setStackedEffects(prev => prev.map((e, i) => i === idx ? { ...e, enabled: checked } : e));
+                                                                                            }}
+                                                                                            className="scale-50 data-[state=checked]:bg-purple-500"
+                                                                                            title={applied.enabled ? "Disable Effect" : "Enable Effect"}
+                                                                                        />
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                setStackedEffects(prev => prev.map((e, i) => i === idx ? {
+                                                                                                    ...e,
+                                                                                                    params: { ...mod.defaultParameters },
+                                                                                                    startTime: 0,
+                                                                                                    endTime: videoDuration
+                                                                                                } : e));
+                                                                                            }}
+                                                                                            className="p-1 rounded bg-white/5 border border-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                                                                            title="Reset Settings & Time"
+                                                                                        >
+                                                                                            <RefreshCw className="w-2.5 h-2.5" />
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                setStackedEffects(prev => prev.filter((_, i) => i !== idx));
+                                                                                                if (expandedAdjustmentId === itemKey) {
+                                                                                                    setExpandedAdjustmentId(null);
+                                                                                                }
+                                                                                            }}
+                                                                                            className="p-1 rounded bg-white/5 border border-white/5 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                                                                                            title="Remove Effect"
+                                                                                        >
+                                                                                            <Trash2 className="w-2.5 h-2.5" />
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                setExpandedAdjustmentId(prev => prev === itemKey ? null : itemKey);
+                                                                                            }}
+                                                                                            className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                                                                        >
+                                                                                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <AnimatePresence initial={false}>
+                                                                                    {isExpanded && applied.enabled && (
+                                                                                        <motion.div
+                                                                                            initial={{ height: 0, opacity: 0 }}
+                                                                                            animate={{ height: "auto", opacity: 1 }}
+                                                                                            exit={{ height: 0, opacity: 0 }}
+                                                                                            transition={{ duration: 0.2, ease: "easeInOut" }}
+                                                                                            className="border-t border-white/5 bg-black/20 p-2.5 space-y-2.5 overflow-hidden"
+                                                                                        >
+                                                                                            {hasParams && mod.adjustableParameters.map(param => {
+                                                                                                const value = applied.params[param.key] ?? mod.defaultParameters[param.key];
+                                                                                                return (
+                                                                                                    <div key={param.key} className="space-y-1">
+                                                                                                        <div className="flex justify-between text-[7px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                                                            <span>{param.name}</span>
+                                                                                                            <span className="font-mono text-purple-400">
+                                                                                                                {param.type === 'number' ? value.toFixed(param.step && param.step < 1 ? 2 : 0) : String(value)}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                        {param.type === 'number' ? (
+                                                                                                            <input
+                                                                                                                type="range"
+                                                                                                                min={param.min}
+                                                                                                                max={param.max}
+                                                                                                                step={param.step}
+                                                                                                                value={value}
+                                                                                                                onChange={e => {
+                                                                                                                    const val = Number(e.target.value);
+                                                                                                                    setStackedEffects(prev => prev.map((item, i) => i === idx ? {
+                                                                                                                        ...item,
+                                                                                                                        params: { ...item.params, [param.key]: val }
+                                                                                                                    } : item));
+                                                                                                                }}
+                                                                                                                className="w-full accent-purple-500 h-1 bg-white/10 rounded-full cursor-pointer"
+                                                                                                            />
+                                                                                                        ) : param.type === 'select' ? (
+                                                                                                            <select
+                                                                                                                value={value}
+                                                                                                                onChange={e => {
+                                                                                                                    const val = e.target.value;
+                                                                                                                    setStackedEffects(prev => prev.map((item, i) => i === idx ? {
+                                                                                                                        ...item,
+                                                                                                                        params: { ...item.params, [param.key]: val }
+                                                                                                                    } : item));
+                                                                                                                }}
+                                                                                                                className="w-full bg-[#181a30] border border-white/10 rounded text-[7.5px] font-bold text-slate-300 p-1 focus:outline-none cursor-pointer"
+                                                                                                            >
+                                                                                                                {param.options?.map(opt => (
+                                                                                                                    <option key={opt} value={opt}>{opt}</option>
+                                                                                                                ))}
+                                                                                                            </select>
+                                                                                                        ) : null}
+                                                                                                    </div>
+                                                                                                );
+                                                                                            })}
+
+                                                                                            {/* Time Duration Controls */}
+                                                                                            <div className="grid grid-cols-2 gap-2 mt-1 pt-2 border-t border-white/5">
+                                                                                                <div className="space-y-1">
+                                                                                                    <div className="flex justify-between text-[7px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                                                        <span>Start Time (s)</span>
+                                                                                                        <span className="font-mono text-amber-400">{(applied.startTime ?? 0).toFixed(1)}s</span>
+                                                                                                    </div>
+                                                                                                    <input
+                                                                                                        type="range"
+                                                                                                        min={0}
+                                                                                                        max={videoDuration}
+                                                                                                        step={0.1}
+                                                                                                        value={applied.startTime ?? 0}
+                                                                                                        onChange={e => {
+                                                                                                            const val = Number(e.target.value);
+                                                                                                            setStackedEffects(prev => prev.map((item, i) => i === idx ? { ...item, startTime: val } : item));
+                                                                                                        }}
+                                                                                                        className="w-full accent-amber-500 h-1 bg-white/10 rounded-full cursor-pointer"
+                                                                                                    />
+                                                                                                </div>
+                                                                                                <div className="space-y-1">
+                                                                                                    <div className="flex justify-between text-[7px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                                                        <span>End Time (s)</span>
+                                                                                                        <span className="font-mono text-amber-400">{(applied.endTime ?? videoDuration).toFixed(1)}s</span>
+                                                                                                    </div>
+                                                                                                    <input
+                                                                                                        type="range"
+                                                                                                        min={0}
+                                                                                                        max={videoDuration}
+                                                                                                        step={0.1}
+                                                                                                        value={applied.endTime ?? videoDuration}
+                                                                                                        onChange={e => {
+                                                                                                            const val = Number(e.target.value);
+                                                                                                            setStackedEffects(prev => prev.map((item, i) => i === idx ? { ...item, endTime: val } : item));
+                                                                                                        }}
+                                                                                                        className="w-full accent-amber-500 h-1 bg-white/10 rounded-full cursor-pointer"
+                                                                                                    />
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    )}
+                                                                                </AnimatePresence>
+                                                                            </Reorder.Item>
+                                                                        );
+                                                                    })}
+                                                                </Reorder.Group>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
@@ -5106,7 +5881,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                 <>
                                                     <video
                                                         ref={videoRef}
-                                                        key={`video-${activePreviewItem.id}`}
+                                                        data-clip-id={activePreviewItem.id}
                                                         onTimeUpdate={handleTimeUpdate}
                                                         onEnded={() => {
                                                             if (lastTriggeredEndRef.current !== activePreviewItem.id) {
@@ -5160,7 +5935,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                             console.error("📹 [PLAYBACK] Video error:", e);
                                                         }}
                                                         src={activePreviewItem.preview}
-                                                        className={CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || CANVAS_PREVIEW_FILTERS.includes(selectedFilter) ? 'hidden' : 'w-full h-full object-contain'}
+                                                        className={(CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || CANVAS_PREVIEW_FILTERS.includes(selectedFilter) || (stackedEffects && stackedEffects.some(e => e.enabled))) ? 'hidden' : 'w-full h-full object-contain'}
                                                         style={{
                                                             opacity: selectedEffect === 'fade-in' ? previewOpacity : 1,
                                                             filter: getCombinedPreviewFilterCss(),
@@ -5172,7 +5947,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                         muted={isMuted}
                                                         playsInline
                                                     />
-                                                    {(CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || CANVAS_PREVIEW_FILTERS.includes(selectedFilter)) && (
+                                                    {(CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || CANVAS_PREVIEW_FILTERS.includes(selectedFilter) || (stackedEffects && stackedEffects.some(e => e.enabled))) && (
                                                         <canvas
                                                             ref={greenScreenCanvasRef}
                                                             className="w-full h-full object-contain"
@@ -6017,6 +6792,47 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
 
 
+
+            {proContextMenu && (
+                <div
+                    className="fixed z-[9999] min-w-[140px] bg-[#11132c]/95 backdrop-blur-md border border-white/10 rounded-xl p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col gap-1"
+                    style={{ left: proContextMenu.x, top: proContextMenu.y }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.nativeEvent.stopImmediatePropagation();
+                            const effId = proContextMenu.effectId;
+                            const eff = getUnifiedEffects().find((e: any) => e.id === effId);
+                            if (eff) {
+                                applyEffectToAllClips(eff);
+                            }
+                            setProContextMenu(null);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-[8.5px] font-black uppercase tracking-wider text-purple-300 hover:bg-purple-500 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Apply to All
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.nativeEvent.stopImmediatePropagation();
+                            const effId = proContextMenu.effectId;
+                            const eff = getUnifiedEffects().find((e: any) => e.id === effId);
+                            if (eff) {
+                                applyEffectToCurrentClip(eff);
+                            }
+                            setProContextMenu(null);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-[8.5px] font-black uppercase tracking-wider text-slate-300 hover:bg-white/5 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Apply to Selected
+                    </button>
+                </div>
+            )}
 
             {/* Custom Styles overrides */}
             <style dangerouslySetInnerHTML={{
