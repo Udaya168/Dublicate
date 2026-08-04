@@ -100,6 +100,7 @@ import { CustomRatioModal } from "./components/CustomRatioModal";
 import { SlidersHorizontal, GripVertical, CassetteTape, Target, Cloud, Eye, Columns, SunDim, Flame, Disc, Grid3X3, Flower2, ChevronUp, ChevronDown } from "lucide-react";
 import { TimelineHub } from "./components/TimelineHub";
 import { getEffectModule, getAllProEffects, getEffectsByCategory } from './effects';
+import { useUndoRedo } from "./components/hooks/useUndoRedo";
 
 import { PremiumModal } from "@/components/premium-modal";
 import { MusicPickerModal } from "@/components/editor/music-picker-modal";
@@ -2227,69 +2228,111 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const [audioError, setAudioError] = useState<string | null>(null);
     const [extractingAudio, setExtractingAudio] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
-    const [history, setHistory] = useState<Array<string>>([]); // Store as JSON strings for easier comparison
-    const [historyIndex, setHistoryIndex] = useState(-1);
+    
+    // -- Professional Reusable Undo/Redo System --
+    const {
+        state: editingSnapshot,
+        set: setEditingSnapshot,
+        undo: undoState,
+        redo: redoState,
+        canUndo,
+        canRedo,
+        history: undoHistory,
+        future: redoFuture,
+    } = useUndoRedo<{
+        selectedEffect: string;
+        selectedFilter: string;
+        overlayText: string;
+        clipTransitions: Record<string, any>;
+        stackedEffects: any[];
+        mediaItems: typeof mediaItems;
+    }>({
+        selectedEffect: 'none',
+        selectedFilter: 'none',
+        overlayText: '',
+        clipTransitions: {},
+        stackedEffects: [],
+        mediaItems: [],
+    }, 50);
+
     const createdPreviewUrlsRef = useRef<string[]>([]);
 
-    // Manage audio object URL to prevent memory leaks
-    useEffect(() => {
-        if (audioTracks.length > 0 && audioTracks[0].file) {
-            const url = URL.createObjectURL(audioTracks[0].file);
-            setAudioUrl(url);
-            return () => URL.revokeObjectURL(url);
-        } else {
-            setAudioUrl(null);
+    const undo = useCallback(() => {
+        if (canUndo) {
+            undoState();
         }
-    }, [audioTracks]);
+    }, [canUndo, undoState]);
 
-    // Manage background music object URL/library URL
-    useEffect(() => {
-        if (selectedMusic) {
-            if (selectedMusic.source === 'library' && selectedMusic.url) {
-                setBgMusicUrl(selectedMusic.url);
-            } else if (selectedMusic.source === 'device' && selectedMusic.file) {
-                const url = URL.createObjectURL(selectedMusic.file);
-                setBgMusicUrl(url);
-                return () => URL.revokeObjectURL(url);
-            }
-        } else {
-            setBgMusicUrl(null);
+    const redo = useCallback(() => {
+        if (canRedo) {
+            redoState();
         }
-    }, [selectedMusic]);
+    }, [canRedo, redoState]);
 
-    useEffect(() => {
-        return () => {
-            createdPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-            createdPreviewUrlsRef.current = [];
-        };
-    }, []);
-
-    const saveToUndo = useCallback((items: typeof mediaItems) => {
-        const itemsStr = JSON.stringify(items);
-        setHistory(prev => {
-            // Don't save if identical to last state
-            if (prev[historyIndex] === itemsStr) return prev;
-            const newHistory = prev.slice(0, historyIndex + 1);
-            return [...newHistory, itemsStr];
+    const saveToUndo = useCallback((partialState: Record<string, any> | typeof mediaItems) => {
+        setEditingSnapshot(prev => {
+            const isArray = Array.isArray(partialState);
+            const patch = isArray ? { mediaItems: partialState } : partialState;
+            return {
+                ...prev,
+                ...patch
+            };
         });
-        setHistoryIndex(prev => prev + 1);
-    }, [historyIndex]);
+    }, [setEditingSnapshot]);
 
-    const undo = () => {
-        if (historyIndex > 0) {
-            const prevItems = JSON.parse(history[historyIndex - 1]);
-            setMediaItems(prevItems);
-            setHistoryIndex(prev => prev - 1);
-        }
-    };
+    // Keyboard Shortcuts for Undo (Ctrl+Z) and Redo (Ctrl+Y / Cmd+Shift+Z)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isInput = ['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName);
+            if (isInput) return;
 
-    const redo = () => {
-        if (historyIndex < history.length - 1) {
-            const nextItems = JSON.parse(history[historyIndex + 1]);
-            setMediaItems(nextItems);
-            setHistoryIndex(prev => prev + 1);
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+                if (e.shiftKey) {
+                    if (canRedo) {
+                        e.preventDefault();
+                        redo();
+                    }
+                } else {
+                    if (canUndo) {
+                        e.preventDefault();
+                        undo();
+                    }
+                }
+            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+                if (canRedo) {
+                    e.preventDefault();
+                    redo();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [canUndo, canRedo, undo, redo]);
+
+    // Sync editingSnapshot state back to active editor variables when undo/redo runs
+    useEffect(() => {
+        if (editingSnapshot) {
+            if (editingSnapshot.selectedEffect !== undefined && editingSnapshot.selectedEffect !== selectedEffect) {
+                setSelectedEffect(editingSnapshot.selectedEffect as any);
+            }
+            if (editingSnapshot.selectedFilter !== undefined && editingSnapshot.selectedFilter !== selectedFilter) {
+                setSelectedFilter(editingSnapshot.selectedFilter as any);
+            }
+            if (editingSnapshot.overlayText !== undefined && editingSnapshot.overlayText !== overlayText) {
+                setOverlayText(editingSnapshot.overlayText);
+            }
+            if (editingSnapshot.clipTransitions !== undefined && JSON.stringify(editingSnapshot.clipTransitions) !== JSON.stringify(clipTransitions)) {
+                setClipTransitions(editingSnapshot.clipTransitions as any);
+            }
+            if (editingSnapshot.stackedEffects !== undefined && JSON.stringify(editingSnapshot.stackedEffects) !== JSON.stringify(stackedEffects)) {
+                setStackedEffects(editingSnapshot.stackedEffects);
+            }
+            if (editingSnapshot.mediaItems !== undefined && JSON.stringify(editingSnapshot.mediaItems) !== JSON.stringify(mediaItems)) {
+                setMediaItems(editingSnapshot.mediaItems);
+            }
         }
-    };
+    }, [editingSnapshot]);
 
     const getMediaDuration = (file: File): Promise<number> => {
         return new Promise((resolve) => {
@@ -3970,8 +4013,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     setMediaItems(items);
                     setLibraryAssets(items);
                     setActivePreviewId(items[0].id);
-                    setHistory([JSON.stringify(items)]);
-                    setHistoryIndex(0);
+                    saveToUndo(items);
                 });
             } else if (initialMedia && (initialMedia.file || initialMedia.preview)) {
                 const preview = initialMedia.file
@@ -3995,8 +4037,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     setLibraryAssets([newItem]);
                     setActivePreviewId('initial');
                     // Initialize undo history with initial state
-                    setHistory([JSON.stringify([newItem])]);
-                    setHistoryIndex(0);
+                    saveToUndo([newItem]);
                 });
             }
 
@@ -4798,13 +4839,40 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
             {/* Top Header */}
             <header className="h-14 flex-none border-b border-white/10 flex items-center justify-between px-4 bg-black/20 backdrop-blur-3xl z-20">
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate("/quick-edit/upload")}
                         className="p-1.5 hover:bg-white/5 rounded transition-colors text-slate-400 hover:text-white"
+                        title="Back to Upload"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </button>
+
+                    <div className="h-4 w-[1px] bg-white/10" />
+
+                    {/* Top Header Undo / Redo Text Control Buttons */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={undo}
+                            disabled={!canUndo}
+                            title="Undo (Ctrl+Z)"
+                            aria-label="Undo"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
+                        >
+                            <Undo2 className="w-3.5 h-3.5" />
+                            <span>Undo</span>
+                        </button>
+                        <button
+                            onClick={redo}
+                            disabled={!canRedo}
+                            title="Redo (Ctrl+Y)"
+                            aria-label="Redo"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
+                        >
+                            <Redo2 className="w-3.5 h-3.5" />
+                            <span>Redo</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex-1 flex justify-center">
@@ -4999,8 +5067,8 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                         </div>
 
                                                         {/* Category Filter Chips */}
-                                                        <div className="flex flex-wrap gap-1.5">
-                                                            {['all', 'camera', 'blur', 'glitch', 'cinematic', 'distortion'].map((cat) => (
+                                                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar">
+                                                            {['all', 'glitch', 'blur', 'cinematic', 'vintage', 'color', 'light', 'motion', 'camera', 'stylize', 'creative', 'distortion', 'retro'].map((cat) => (
                                                                 <button
                                                                     key={cat}
                                                                     onClick={() => setProCategoryFilter(cat as any)}
@@ -5032,7 +5100,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                     {/* Effects List */}
                                                     <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-500/20 [&::-webkit-scrollbar-thumb]:rounded-full">
                                                         {/* Collapsible Categories */}
-                                                        {['camera', 'blur', 'glitch', 'cinematic', 'distortion'].map(category => {
+                                                        {['glitch', 'blur', 'cinematic', 'vintage', 'color', 'light', 'motion', 'camera', 'stylize', 'creative', 'distortion', 'retro'].map(category => {
                                                             if (proCategoryFilter !== 'all' && proCategoryFilter !== category) return null;
                                                             
                                                             // Filter effects for this category
@@ -5045,7 +5113,18 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                                                             if (effectsInCategory.length === 0) return null;
                                                             const isCollapsed = collapsedCategories[category];
-                                                            const CategoryIcon = category === 'camera' ? Camera : category === 'blur' ? Wind : category === 'glitch' ? Tv : category === 'cinematic' ? Film : Waves;
+                                                            const CategoryIcon =
+                                                                category === 'camera' ? Camera :
+                                                                category === 'blur' ? Wind :
+                                                                category === 'glitch' ? Tv :
+                                                                category === 'cinematic' ? Film :
+                                                                category === 'vintage' ? CassetteTape :
+                                                                category === 'color' ? Palette :
+                                                                category === 'light' ? SunDim :
+                                                                category === 'motion' ? Activity :
+                                                                category === 'stylize' ? Sparkles :
+                                                                category === 'creative' ? Wand2 :
+                                                                category === 'retro' ? Clock3 : Waves;
 
                                                             return (
                                                                 <div key={category} className="border border-white/5 rounded-xl overflow-hidden bg-black/10">
@@ -5083,10 +5162,13 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                                         }}
                                                                                         className="flex gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all group select-none cursor-context-menu"
                                                                                     >
-                                                                                        {/* Thumbnail */}
-                                                                                        <div className="w-[45px] h-[45px] rounded-lg overflow-hidden shrink-0 border border-white/10 relative bg-purple-950/20 flex items-center justify-center">
-                                                                                            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-teal-500/20 mix-blend-overlay" />
-                                                                                            <eff.icon className="w-4 h-4 text-purple-300" />
+                                                                                        {/* Thumbnail with previewColor accent */}
+                                                                                        <div
+                                                                                            className="w-[45px] h-[45px] rounded-lg overflow-hidden shrink-0 border border-white/10 relative flex items-center justify-center"
+                                                                                            style={{ backgroundColor: eff.previewColor ? `${eff.previewColor}25` : '#1e1b4b' }}
+                                                                                        >
+                                                                                            <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent mix-blend-overlay" />
+                                                                                            <eff.icon className="w-4 h-4" style={{ color: eff.previewColor || '#c084fc' }} />
                                                                                         </div>
 
                                                                                         {/* Details */}
@@ -5108,19 +5190,25 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                                             <button
                                                                                                 onClick={() => {
                                                                                                     if (eff.isClassic) {
-                                                                                                        setSelectedEffect(isApplied ? 'none' : eff.id);
+                                                                                                        const next = isApplied ? 'none' : eff.id;
+                                                                                                        setSelectedEffect(next);
+                                                                                                        saveToUndo({ selectedEffect: next });
                                                                                                     } else {
                                                                                                         if (isApplied) {
-                                                                                                            setStackedEffects(prev => prev.filter(e => e.id !== eff.id));
+                                                                                                            const nextStacked = stackedEffects.filter(e => e.id !== eff.id);
+                                                                                                            setStackedEffects(nextStacked);
+                                                                                                            saveToUndo({ stackedEffects: nextStacked });
                                                                                                         } else {
-                                                                                                            setStackedEffects(prev => [
-                                                                                                                ...prev,
+                                                                                                            const nextStacked = [
+                                                                                                                ...stackedEffects,
                                                                                                                 {
                                                                                                                     id: eff.id,
                                                                                                                     params: { ...eff.defaultParameters },
                                                                                                                     enabled: true
                                                                                                                 }
-                                                                                                            ]);
+                                                                                                            ];
+                                                                                                            setStackedEffects(nextStacked);
+                                                                                                            saveToUndo({ stackedEffects: nextStacked });
                                                                                                             const nextRecents = [eff.id, ...proRecentlyUsed.filter(id => id !== eff.id)].slice(0, 5);
                                                                                                             setProRecentlyUsed(nextRecents);
                                                                                                             localStorage.setItem('veytrix_pro_recents', JSON.stringify(nextRecents));
@@ -6166,10 +6254,13 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={undo}
-                                    disabled={historyIndex <= 0}
-                                    className="p-1 text-slate-500 hover:text-white disabled:opacity-20 transition-colors"
+                                    disabled={!canUndo}
+                                    title="Undo (Ctrl+Z)"
+                                    aria-label="Undo action"
+                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/30 text-slate-200 hover:text-white disabled:opacity-25 disabled:hover:bg-white/5 disabled:hover:text-slate-400 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs"
                                 >
-                                    <Undo2 className="w-4 h-4" />
+                                    <Undo2 className="w-3.5 h-3.5" />
+                                    <span>Undo</span>
                                 </button>
 
                                 <button
@@ -6220,10 +6311,13 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                                 <button
                                     onClick={redo}
-                                    disabled={historyIndex >= history.length - 1}
-                                    className="p-1 text-slate-500 hover:text-white disabled:opacity-20 transition-colors"
+                                    disabled={!canRedo}
+                                    title="Redo (Ctrl+Y)"
+                                    aria-label="Redo action"
+                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/30 text-slate-200 hover:text-white disabled:opacity-25 disabled:hover:bg-white/5 disabled:hover:text-slate-400 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs"
                                 >
-                                    <Redo2 className="w-4 h-4" />
+                                    <Redo2 className="w-3.5 h-3.5" />
+                                    <span>Redo</span>
                                 </button>
 
                                 <div className="w-[1px] h-4 bg-white/10 mx-1" />

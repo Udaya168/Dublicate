@@ -1,10 +1,25 @@
+export type EffectCategory =
+  | 'camera'
+  | 'blur'
+  | 'glitch'
+  | 'cinematic'
+  | 'distortion'
+  | 'motion'
+  | 'light'
+  | 'retro'
+  | 'color'
+  | 'vintage'
+  | 'stylize'
+  | 'creative';
+
 export interface EffectModule {
   id: string;
   name: string;
-  category: 'camera' | 'blur' | 'glitch' | 'cinematic' | 'distortion' | 'motion' | 'light' | 'retro';
+  category: EffectCategory;
   icon: any;
   thumbnail: string;
   description: string;
+  previewColor?: string;
   defaultParameters: Record<string, any>;
   adjustableParameters: Array<{
     name: string;
