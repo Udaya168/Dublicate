@@ -677,6 +677,9 @@ export const TimelineHub = memo(({
           if (isMagnetEnabled) {
             setTimeout(() => triggerMagnetRipple(prev.ghostTrackId), 10);
           }
+          if (saveToUndo) {
+            setTimeout(() => saveToUndo(), 20);
+          }
         }
         return null;
       });
@@ -685,7 +688,7 @@ export const TimelineHub = memo(({
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-  }, [clips, selectedClipIds, pixelsPerSecond, getSnappedTime, tracks, paddingLeft, isMagnetEnabled, setActivePreviewId]);
+  }, [clips, selectedClipIds, pixelsPerSecond, getSnappedTime, tracks, paddingLeft, isMagnetEnabled, setActivePreviewId, saveToUndo]);
 
   /* ── Magnetic Alignment (Ripple editing) ──────────────────── */
   const triggerMagnetRipple = useCallback((trackId: string) => {
@@ -728,10 +731,13 @@ export const TimelineHub = memo(({
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      if (saveToUndo) {
+        saveToUndo();
+      }
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-  }, [pixelsPerSecond, getTrimRangeForItem, setClipTrimRanges]);
+  }, [pixelsPerSecond, getTrimRangeForItem, setClipTrimRanges, saveToUndo]);
 
   /* ── Canvas Box Selection ──────────────────────────────────── */
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {

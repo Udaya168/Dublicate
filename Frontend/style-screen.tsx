@@ -378,7 +378,76 @@ const CANVAS_PREVIEW_EFFECTS = [
 ];
 
 const CANVAS_PREVIEW_FILTERS = [
-    'vintage',
+    'vintage', 'cinematic', 'moody', 'warm-tone', 'cool-tone', 'black-white', 'teal-orange', 'dreamy-glow', 'film-look', 'vhs', 'soft-skin', 'neon-glow', 'hdr-pop',
+    'pro-brightness', 'pro-contrast', 'pro-saturation', 'pro-exposure', 'pro-gamma', 'pro-temperature', 'pro-tint', 'pro-vibrance', 'pro-hue-rotate', 'pro-color-balance',
+    'pro-film-look', 'pro-vintage', 'pro-noir', 'pro-sepia', 'pro-hdr', 'pro-teal-orange', 'pro-bleach-bypass', 'pro-soft-glow', 'pro-dream', 'pro-fade-film',
+    'pro-gaussian-blur', 'pro-box-blur', 'pro-motion-blur', 'pro-radial-blur', 'pro-lens-blur',
+    'pro-fisheye', 'pro-wave', 'pro-ripple', 'pro-bulge', 'pro-twirl',
+    'pro-lens-flare', 'pro-light-leak', 'pro-glow', 'pro-bloom', 'pro-shadow',
+    'pro-film-grain', 'pro-dust', 'pro-vhs-noise', 'pro-rgb-split', 'pro-static-noise',
+    'pro-pixelate', 'pro-cartoon', 'pro-sketch', 'pro-posterize', 'pro-oil-painting',
+    'pro-shake', 'pro-zoom-pulse', 'pro-slow-zoom', 'pro-flash', 'pro-strobe'
+];
+
+export const PRO_50_FILTERS = [
+    { id: 'none',                label: 'No Filter',      category: 'color',     icon: CircleOff,   color: '#94a3b8', description: 'Original un-filtered source footage.' },
+    { id: 'pro-brightness',      label: 'Brightness',     category: 'color',     icon: Sun,         color: '#facc15', description: 'Boost frame brightness and luminance.' },
+    { id: 'pro-contrast',        label: 'Contrast',       category: 'color',     icon: Contrast,    color: '#a855f7', description: 'Enhance tonal contrast separation.' },
+    { id: 'pro-saturation',      label: 'Vivid Colors',   category: 'color',     icon: Palette,     color: '#ec4899', description: 'Deep rich color saturation boost.' },
+    { id: 'pro-exposure',        label: 'EV Exposure',    category: 'color',     icon: SunDim,      color: '#fbbf24', description: 'Camera EV exposure simulation.' },
+    { id: 'pro-gamma',           label: 'Gamma Curves',   category: 'color',     icon: Sliders,     color: '#38bdf8', description: 'Midtone gamma curve adjustment.' },
+    { id: 'pro-temperature',     label: 'Temperature',    category: 'color',     icon: Flame,       color: '#f97316', description: 'Warm golden to cool blue shift.' },
+    { id: 'pro-tint',            label: 'Tint Shift',     category: 'color',     icon: Droplets,    color: '#34d399', description: 'Green to magenta color tint.' },
+    { id: 'pro-vibrance',        label: 'Vibrance',       category: 'color',     icon: Sparkles,    color: '#c084fc', description: 'Smart vibrant color enhancement.' },
+    { id: 'pro-hue-rotate',      label: 'Hue Shift',      category: 'color',     icon: RotateCw,    color: '#e879f9', description: 'Full spectrum 360 hue rotation.' },
+    { id: 'pro-color-balance',   label: 'RGB Balance',    category: 'color',     icon: Sliders,     color: '#818cf8', description: 'Independent RGB channel balancing.' },
+
+    { id: 'cinematic',           label: 'Cinematic',      category: 'cinematic', icon: Clapperboard,color: '#a78bfa', description: '35mm blockbuster film grade.' },
+    { id: 'pro-film-look',       label: '35mm Film',      category: 'cinematic', icon: Film,        color: '#c084fc', description: 'Authentic 35mm motion picture look.' },
+    { id: 'vintage',             label: 'Vintage 70s',    category: 'cinematic', icon: Clock3,      color: '#fb923c', description: 'Retro 1970s nostalgia warm grade.' },
+    { id: 'black-white',         label: 'B&W Classic',    category: 'cinematic', icon: Contrast,    color: '#94a3b8', description: 'High-contrast monochrome black & white.' },
+    { id: 'pro-sepia',           label: 'Warm Sepia',     category: 'cinematic', icon: CassetteTape,color: '#d97706', description: 'Antique sepia photograph tone.' },
+    { id: 'hdr-pop',             label: 'HDR Pop',        category: 'cinematic', icon: Aperture,    color: '#f87171', description: 'Ultra dynamic high-contrast HDR.' },
+    { id: 'teal-orange',         label: 'Teal & Orange',  category: 'cinematic', icon: Palette,     color: '#2dd4bf', description: 'Hollywood teal and orange contrast.' },
+    { id: 'pro-bleach-bypass',   label: 'Bleach Bypass',  category: 'cinematic', icon: Film,        color: '#64748b', description: 'Silver retention bleach bypass grade.' },
+    { id: 'dreamy-glow',         label: 'Dreamy',         category: 'cinematic', icon: Sparkles,    color: '#e879f9', description: 'Soft ethereal dreamy atmosphere.' },
+    { id: 'pro-fade-film',       label: 'Faded Film',     category: 'cinematic', icon: Sunrise,     color: '#f472b6', description: 'Soft matte black film fade.' },
+
+    { id: 'pro-gaussian-blur',   label: 'Gaussian Blur',  category: 'blur',      icon: Wind,        color: '#38bdf8', description: 'Smooth Gaussian soft focus blur.' },
+    { id: 'pro-box-blur',        label: 'Box Blur',       category: 'blur',      icon: Square,      color: '#60a5fa', description: 'Linear box blur filter.' },
+    { id: 'pro-motion-blur',     label: 'Motion Blur',    category: 'blur',      icon: Wind,        color: '#818cf8', description: 'Speed directional motion blur.' },
+    { id: 'pro-radial-blur',     label: 'Radial Blur',    category: 'blur',      icon: RotateCw,    color: '#a78bfa', description: 'Rotational zoom radial blur.' },
+    { id: 'pro-lens-blur',       label: 'Lens Bokeh',     category: 'blur',      icon: Aperture,    color: '#c084fc', description: 'Camera lens depth of field bokeh.' },
+
+    { id: 'pro-fisheye',         label: 'Fisheye Lens',   category: 'distortion',icon: Eye,         color: '#34d399', description: 'Curved wide-angle fisheye lens.' },
+    { id: 'pro-wave',            label: 'Wave Ripple',    category: 'distortion',icon: Waves,       color: '#22d3ee', description: 'Dynamic liquid wave distortion.' },
+    { id: 'pro-ripple',          label: 'Water Surface',  category: 'distortion',icon: Droplets,    color: '#38bdf8', description: 'Concentric water ripple distortion.' },
+    { id: 'pro-bulge',           label: 'Center Bulge',   category: 'distortion',icon: Maximize2,   color: '#a855f7', description: 'Spherical center distortion bulge.' },
+    { id: 'pro-twirl',           label: 'Vortex Twirl',   category: 'distortion',icon: RotateCw,    color: '#ec4899', description: 'Spiral vortex twirl distortion.' },
+
+    { id: 'pro-lens-flare',      label: 'Sun Flare',      category: 'light',     icon: Sun,         color: '#fbbf24', description: 'Anamorphic sun lens flare glow.' },
+    { id: 'pro-light-leak',      label: 'Light Leak',     category: 'light',     icon: SunDim,      color: '#f97316', description: 'Organic film canister light leak.' },
+    { id: 'neon-glow',           label: 'Neon Glow',      category: 'light',     icon: Lightbulb,   color: '#facc15', description: 'Vibrant cyberpunk neon illumination.' },
+    { id: 'pro-bloom',           label: 'Bloom Highlight',category: 'light',     icon: Sparkles,    color: '#f472b6', description: 'Soft bloom highlight diffusion.' },
+    { id: 'moody',               label: 'Moody Shadows',  category: 'light',     icon: MoonStar,    color: '#6366f1', description: 'Deep low-key dramatic shadows.' },
+
+    { id: 'pro-film-grain',      label: 'Grain Overlay',  category: 'noise',     icon: Film,        color: '#fb923c', description: 'Analog 16mm grain noise texture.' },
+    { id: 'pro-dust',            label: 'Dust & Scratches',category: 'noise',    icon: CassetteTape,color: '#d97706', description: 'Scratched film projection archive.' },
+    { id: 'vhs',                 label: 'VHS Tape',       category: 'noise',     icon: Tv,          color: '#4ade80', description: 'Retro VHS cassette noise scanlines.' },
+    { id: 'pro-rgb-split',       label: 'RGB Split',      category: 'noise',     icon: Palette,     color: '#ec4899', description: 'Chromatic aberration RGB channel split.' },
+    { id: 'pro-static-noise',    label: 'TV Static',      category: 'noise',     icon: Tv,          color: '#f87171', description: 'Analog CRT screen static signal noise.' },
+
+    { id: 'pro-pixelate',        label: 'Pixel Art',      category: 'stylize',   icon: Grid3X3,     color: '#22d3ee', description: '8-bit retro pixel block filter.' },
+    { id: 'pro-cartoon',         label: 'Toon Shading',   category: 'stylize',   icon: Smile,       color: '#facc15', description: 'Vibrant pop-art cartoon outline.' },
+    { id: 'pro-sketch',          label: 'Pencil Sketch',  category: 'stylize',   icon: Edit2,       color: '#94a3b8', description: 'Hand-drawn graphite pencil sketch.' },
+    { id: 'pro-posterize',       label: 'Posterize',      category: 'stylize',   icon: Layers,      color: '#e879f9', description: 'Limited color palette posterization.' },
+    { id: 'pro-oil-painting',    label: 'Oil Canvas',     category: 'stylize',   icon: Palette,     color: '#f472b6', description: 'Rich textured impressionist oil painting.' },
+
+    { id: 'pro-shake',           label: 'Camera Shake',   category: 'motion',    icon: Vibrate,     color: '#60a5fa', description: 'Action camera handheld shake.' },
+    { id: 'pro-zoom-pulse',      label: 'Beat Pulse',     category: 'motion',    icon: Activity,    color: '#a78bfa', description: 'Rhythmic zoom pulse punch.' },
+    { id: 'pro-slow-zoom',       label: 'Ken Burns Zoom', category: 'motion',    icon: ZoomIn,      color: '#34d399', description: 'Smooth slow camera motion zoom.' },
+    { id: 'pro-flash',           label: 'Light Strobe',   category: 'motion',    icon: Zap,         color: '#fbbf24', description: 'Rapid white strobe flash bursts.' },
+    { id: 'pro-strobe',          label: 'Strobe Beat',    category: 'motion',    icon: Zap,         color: '#ef4444', description: 'High frequency strobe beat pulse.' }
 ];
 
 // TimelineHub is now imported from "./components/TimelineHub"
@@ -388,7 +457,7 @@ const CANVAS_PREVIEW_FILTERS = [
 const FilmoraLeftPanel = memo(({
     activePreviewId, clipTransitions, applyTransitionForActiveClip,
     selectedEffect, setSelectedEffect, selectedFilter, setSelectedFilter,
-    activeTool, setActiveTool,
+    activeTool, setActiveTool, undo, redo, canUndo, canRedo,
     /* tools panel props */
     velocitySpeed, setVelocitySpeed, motionBlurAmount, setMotionBlurAmount,
     shakeStrength, setShakeStrength, flashIntensity, setFlashIntensity,
@@ -466,22 +535,7 @@ const FilmoraLeftPanel = memo(({
         { id: 'motion-tracking', label: 'Tracking',    icon: Crosshair, color: '#4ade80' },
     ];
 
-    const filterItems = [
-        { id: 'none',        label: 'No Filter',   icon: CircleOff,    color: '#94a3b8' },
-        { id: 'cinematic',   label: 'Cinematic',   icon: Clapperboard, color: '#a78bfa' },
-        { id: 'moody',       label: 'Moody',       icon: MoonStar,     color: '#6366f1' },
-        { id: 'warm-tone',   label: 'Warm',        icon: Sun,          color: '#f59e0b' },
-        { id: 'cool-tone',   label: 'Cool',        icon: Snowflake,    color: '#38bdf8' },
-        { id: 'vintage',     label: 'Vintage',     icon: Clock3,       color: '#fb923c' },
-        { id: 'black-white', label: 'B&W',         icon: Contrast,     color: '#94a3b8' },
-        { id: 'teal-orange', label: 'Teal+Orange', icon: Palette,      color: '#2dd4bf' },
-        { id: 'dreamy-glow', label: 'Dreamy',      icon: Sparkles,     color: '#e879f9' },
-        { id: 'film-look',   label: 'Film Look',   icon: Film,         color: '#c084fc' },
-        { id: 'vhs',         label: 'VHS',         icon: Tv,           color: '#4ade80' },
-        { id: 'soft-skin',   label: 'Soft Skin',   icon: Smile,        color: '#f9a8d4' },
-        { id: 'neon-glow',   label: 'Neon',        icon: Lightbulb,    color: '#facc15' },
-        { id: 'hdr-pop',     label: 'HDR Pop',     icon: Aperture,     color: '#f87171' },
-    ];
+    const filterItems = PRO_50_FILTERS;
 
     const renderGrid = (
         items: { id: string; label: string; icon: any; color: string }[],
@@ -709,6 +763,29 @@ const FilmoraLeftPanel = memo(({
                             </div>
                         ) : (
                             <>
+                                <div>
+                                    <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block mb-2">History & Undo/Redo Options</span>
+                                    <div className="grid grid-cols-2 gap-1.5 mb-3">
+                                        <button
+                                            onClick={undo}
+                                            disabled={!canUndo}
+                                            title="Undo last action (Ctrl+Z)"
+                                            className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-[9px] shadow-sm"
+                                        >
+                                            <Undo2 className="w-3.5 h-3.5" />
+                                            <span>Undo Action</span>
+                                        </button>
+                                        <button
+                                            onClick={redo}
+                                            disabled={!canRedo}
+                                            title="Redo action (Ctrl+Y)"
+                                            className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-[9px] shadow-sm"
+                                        >
+                                            <Redo2 className="w-3.5 h-3.5" />
+                                            <span>Redo Action</span>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div>
                                     <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Smart Auto Features</span>
                                     <div className="grid grid-cols-2 gap-1.5">
@@ -2183,7 +2260,8 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         | 'vhs'
         | 'soft-skin'
         | 'neon-glow'
-        | 'hdr-pop';
+        | 'hdr-pop'
+        | string;
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -2229,110 +2307,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const [extractingAudio, setExtractingAudio] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
     
-    // -- Professional Reusable Undo/Redo System --
-    const {
-        state: editingSnapshot,
-        set: setEditingSnapshot,
-        undo: undoState,
-        redo: redoState,
-        canUndo,
-        canRedo,
-        history: undoHistory,
-        future: redoFuture,
-    } = useUndoRedo<{
-        selectedEffect: string;
-        selectedFilter: string;
-        overlayText: string;
-        clipTransitions: Record<string, any>;
-        stackedEffects: any[];
-        mediaItems: typeof mediaItems;
-    }>({
-        selectedEffect: 'none',
-        selectedFilter: 'none',
-        overlayText: '',
-        clipTransitions: {},
-        stackedEffects: [],
-        mediaItems: [],
-    }, 50);
-
     const createdPreviewUrlsRef = useRef<string[]>([]);
-
-    const undo = useCallback(() => {
-        if (canUndo) {
-            undoState();
-        }
-    }, [canUndo, undoState]);
-
-    const redo = useCallback(() => {
-        if (canRedo) {
-            redoState();
-        }
-    }, [canRedo, redoState]);
-
-    const saveToUndo = useCallback((partialState: Record<string, any> | typeof mediaItems) => {
-        setEditingSnapshot(prev => {
-            const isArray = Array.isArray(partialState);
-            const patch = isArray ? { mediaItems: partialState } : partialState;
-            return {
-                ...prev,
-                ...patch
-            };
-        });
-    }, [setEditingSnapshot]);
-
-    // Keyboard Shortcuts for Undo (Ctrl+Z) and Redo (Ctrl+Y / Cmd+Shift+Z)
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const isInput = ['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName);
-            if (isInput) return;
-
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
-                if (e.shiftKey) {
-                    if (canRedo) {
-                        e.preventDefault();
-                        redo();
-                    }
-                } else {
-                    if (canUndo) {
-                        e.preventDefault();
-                        undo();
-                    }
-                }
-            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
-                if (canRedo) {
-                    e.preventDefault();
-                    redo();
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [canUndo, canRedo, undo, redo]);
-
-    // Sync editingSnapshot state back to active editor variables when undo/redo runs
-    useEffect(() => {
-        if (editingSnapshot) {
-            if (editingSnapshot.selectedEffect !== undefined && editingSnapshot.selectedEffect !== selectedEffect) {
-                setSelectedEffect(editingSnapshot.selectedEffect as any);
-            }
-            if (editingSnapshot.selectedFilter !== undefined && editingSnapshot.selectedFilter !== selectedFilter) {
-                setSelectedFilter(editingSnapshot.selectedFilter as any);
-            }
-            if (editingSnapshot.overlayText !== undefined && editingSnapshot.overlayText !== overlayText) {
-                setOverlayText(editingSnapshot.overlayText);
-            }
-            if (editingSnapshot.clipTransitions !== undefined && JSON.stringify(editingSnapshot.clipTransitions) !== JSON.stringify(clipTransitions)) {
-                setClipTransitions(editingSnapshot.clipTransitions as any);
-            }
-            if (editingSnapshot.stackedEffects !== undefined && JSON.stringify(editingSnapshot.stackedEffects) !== JSON.stringify(stackedEffects)) {
-                setStackedEffects(editingSnapshot.stackedEffects);
-            }
-            if (editingSnapshot.mediaItems !== undefined && JSON.stringify(editingSnapshot.mediaItems) !== JSON.stringify(mediaItems)) {
-                setMediaItems(editingSnapshot.mediaItems);
-            }
-        }
-    }, [editingSnapshot]);
 
     const getMediaDuration = (file: File): Promise<number> => {
         return new Promise((resolve) => {
@@ -2550,6 +2525,236 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         window.addEventListener('click', handleGlobalClick);
         return () => window.removeEventListener('click', handleGlobalClick);
     }, []);
+
+    // -- Professional Reusable Undo/Redo System --
+    const isRestoringFromUndoRef = useRef(false);
+    const {
+        state: editingSnapshot,
+        set: setEditingSnapshot,
+        undo: undoState,
+        redo: redoState,
+        canUndo,
+        canRedo,
+        history: undoHistory,
+        future: redoFuture,
+    } = useUndoRedo<Record<string, any>>({}, 100);
+
+    const undo = useCallback(() => {
+        if (canUndo) {
+            undoState();
+        }
+    }, [canUndo, undoState]);
+
+    const redo = useCallback(() => {
+        if (canRedo) {
+            redoState();
+        }
+    }, [canRedo, redoState]);
+
+    const saveToUndo = useCallback((partialState?: Record<string, any> | typeof mediaItems) => {
+        if (isRestoringFromUndoRef.current) return;
+        setEditingSnapshot((prev: any) => {
+            const isArray = Array.isArray(partialState);
+            const patch = isArray ? { mediaItems: partialState } : (partialState || {});
+            return {
+                ...prev,
+                mediaItems: patch.mediaItems !== undefined ? patch.mediaItems : mediaItems,
+                clipTrimRanges: patch.clipTrimRanges !== undefined ? patch.clipTrimRanges : clipTrimRanges,
+                clipSettings: patch.clipSettings !== undefined ? patch.clipSettings : clipSettings,
+                clipTransitions: patch.clipTransitions !== undefined ? patch.clipTransitions : clipTransitions,
+                stackedEffects: patch.stackedEffects !== undefined ? patch.stackedEffects : stackedEffects,
+                selectedEffect: patch.selectedEffect !== undefined ? patch.selectedEffect : selectedEffect,
+                selectedFilter: patch.selectedFilter !== undefined ? patch.selectedFilter : selectedFilter,
+                overlayText: patch.overlayText !== undefined ? patch.overlayText : overlayText,
+                overlayFontId: patch.overlayFontId !== undefined ? patch.overlayFontId : overlayFontId,
+                overlayFontSize: patch.overlayFontSize !== undefined ? patch.overlayFontSize : overlayFontSize,
+                overlayColor: patch.overlayColor !== undefined ? patch.overlayColor : overlayColor,
+                overlayTextStylePreset: patch.overlayTextStylePreset !== undefined ? patch.overlayTextStylePreset : overlayTextStylePreset,
+                overlayPosX: patch.overlayPosX !== undefined ? patch.overlayPosX : overlayPosX,
+                overlayPosY: patch.overlayPosY !== undefined ? patch.overlayPosY : overlayPosY,
+                overlayBgEnabled: patch.overlayBgEnabled !== undefined ? patch.overlayBgEnabled : overlayBgEnabled,
+                overlayBgColorHex: patch.overlayBgColorHex !== undefined ? patch.overlayBgColorHex : overlayBgColorHex,
+                speedValue: patch.speedValue !== undefined ? patch.speedValue : speedValue,
+                rotationDegrees: patch.rotationDegrees !== undefined ? patch.rotationDegrees : rotationDegrees,
+                volumeLevel: patch.volumeLevel !== undefined ? patch.volumeLevel : volumeLevel,
+                zoomToolAmount: patch.zoomToolAmount !== undefined ? patch.zoomToolAmount : zoomToolAmount,
+                zoomToolAmountX: patch.zoomToolAmountX !== undefined ? patch.zoomToolAmountX : zoomToolAmountX,
+                zoomToolAmountY: patch.zoomToolAmountY !== undefined ? patch.zoomToolAmountY : zoomToolAmountY,
+                posX: patch.posX !== undefined ? patch.posX : posX,
+                posY: patch.posY !== undefined ? patch.posY : posY,
+                flipH: patch.flipH !== undefined ? patch.flipH : flipH,
+                flipV: patch.flipV !== undefined ? patch.flipV : flipV,
+                cornerRadius: patch.cornerRadius !== undefined ? patch.cornerRadius : cornerRadius,
+                cropCenterX: patch.cropCenterX !== undefined ? patch.cropCenterX : cropCenterX,
+                cropCenterY: patch.cropCenterY !== undefined ? patch.cropCenterY : cropCenterY,
+                cropWidthPct: patch.cropWidthPct !== undefined ? patch.cropWidthPct : cropWidthPct,
+                cropHeightPct: patch.cropHeightPct !== undefined ? patch.cropHeightPct : cropHeightPct,
+                aspectRatio: patch.aspectRatio !== undefined ? patch.aspectRatio : aspectRatio,
+                activePreviewId: patch.activePreviewId !== undefined ? patch.activePreviewId : activePreviewId,
+                audioTracks: patch.audioTracks !== undefined ? patch.audioTracks : audioTracks,
+                bgMusicUrl: patch.bgMusicUrl !== undefined ? patch.bgMusicUrl : bgMusicUrl,
+                ...patch
+            };
+        });
+    }, [
+        setEditingSnapshot, mediaItems, clipTrimRanges, clipSettings, clipTransitions, stackedEffects,
+        selectedEffect, selectedFilter, overlayText, overlayFontId, overlayFontSize, overlayColor,
+        overlayTextStylePreset, overlayPosX, overlayPosY, overlayBgEnabled, overlayBgColorHex, speedValue,
+        rotationDegrees, volumeLevel, zoomToolAmount, zoomToolAmountX, zoomToolAmountY, posX, posY,
+        flipH, flipV, cornerRadius, cropCenterX, cropCenterY, cropWidthPct, cropHeightPct, aspectRatio,
+        activePreviewId, audioTracks, bgMusicUrl
+    ]);
+
+    // Keyboard Shortcuts for Undo (Ctrl+Z / Cmd+Z) and Redo (Ctrl+Y / Cmd+Y / Ctrl+Shift+Z / Cmd+Shift+Z)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isInput = ['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName);
+            if (isInput) return;
+
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+                if (e.shiftKey) {
+                    if (canRedo) {
+                        e.preventDefault();
+                        redo();
+                    }
+                } else {
+                    if (canUndo) {
+                        e.preventDefault();
+                        undo();
+                    }
+                }
+            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+                if (canRedo) {
+                    e.preventDefault();
+                    redo();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [canUndo, canRedo, undo, redo]);
+
+    // Sync editingSnapshot state back to active editor variables when undo/redo runs
+    useEffect(() => {
+        if (editingSnapshot && Object.keys(editingSnapshot).length > 0) {
+            isRestoringFromUndoRef.current = true;
+            if (editingSnapshot.selectedEffect !== undefined && editingSnapshot.selectedEffect !== selectedEffect) {
+                setSelectedEffect(editingSnapshot.selectedEffect as any);
+            }
+            if (editingSnapshot.selectedFilter !== undefined && editingSnapshot.selectedFilter !== selectedFilter) {
+                setSelectedFilter(editingSnapshot.selectedFilter as any);
+            }
+            if (editingSnapshot.overlayText !== undefined && editingSnapshot.overlayText !== overlayText) {
+                setOverlayText(editingSnapshot.overlayText);
+            }
+            if (editingSnapshot.overlayFontId !== undefined && editingSnapshot.overlayFontId !== overlayFontId) {
+                setOverlayFontId(editingSnapshot.overlayFontId);
+            }
+            if (editingSnapshot.overlayFontSize !== undefined && editingSnapshot.overlayFontSize !== overlayFontSize) {
+                setOverlayFontSize(editingSnapshot.overlayFontSize);
+            }
+            if (editingSnapshot.overlayColor !== undefined && editingSnapshot.overlayColor !== overlayColor) {
+                setOverlayColor(editingSnapshot.overlayColor);
+            }
+            if (editingSnapshot.overlayTextStylePreset !== undefined && editingSnapshot.overlayTextStylePreset !== overlayTextStylePreset) {
+                setOverlayTextStylePreset(editingSnapshot.overlayTextStylePreset);
+            }
+            if (editingSnapshot.overlayPosX !== undefined && editingSnapshot.overlayPosX !== overlayPosX) {
+                setOverlayPosX(editingSnapshot.overlayPosX);
+            }
+            if (editingSnapshot.overlayPosY !== undefined && editingSnapshot.overlayPosY !== overlayPosY) {
+                setOverlayPosY(editingSnapshot.overlayPosY);
+            }
+            if (editingSnapshot.overlayBgEnabled !== undefined && editingSnapshot.overlayBgEnabled !== overlayBgEnabled) {
+                setOverlayBgEnabled(editingSnapshot.overlayBgEnabled);
+            }
+            if (editingSnapshot.overlayBgColorHex !== undefined && editingSnapshot.overlayBgColorHex !== overlayBgColorHex) {
+                setOverlayBgColorHex(editingSnapshot.overlayBgColorHex);
+            }
+            if (editingSnapshot.clipTransitions !== undefined && JSON.stringify(editingSnapshot.clipTransitions) !== JSON.stringify(clipTransitions)) {
+                setClipTransitions(editingSnapshot.clipTransitions as any);
+            }
+            if (editingSnapshot.stackedEffects !== undefined && JSON.stringify(editingSnapshot.stackedEffects) !== JSON.stringify(stackedEffects)) {
+                setStackedEffects(editingSnapshot.stackedEffects);
+            }
+            if (editingSnapshot.mediaItems !== undefined && JSON.stringify(editingSnapshot.mediaItems) !== JSON.stringify(mediaItems)) {
+                setMediaItems(editingSnapshot.mediaItems);
+            }
+            if (editingSnapshot.clipTrimRanges !== undefined && JSON.stringify(editingSnapshot.clipTrimRanges) !== JSON.stringify(clipTrimRanges)) {
+                setClipTrimRanges(editingSnapshot.clipTrimRanges);
+            }
+            if (editingSnapshot.clipSettings !== undefined && JSON.stringify(editingSnapshot.clipSettings) !== JSON.stringify(clipSettings)) {
+                setClipSettings(editingSnapshot.clipSettings);
+            }
+            if (editingSnapshot.speedValue !== undefined && editingSnapshot.speedValue !== speedValue) {
+                setSpeedValue(editingSnapshot.speedValue);
+            }
+            if (editingSnapshot.rotationDegrees !== undefined && editingSnapshot.rotationDegrees !== rotationDegrees) {
+                setRotationDegrees(editingSnapshot.rotationDegrees);
+            }
+            if (editingSnapshot.volumeLevel !== undefined && editingSnapshot.volumeLevel !== volumeLevel) {
+                setVolumeLevel(editingSnapshot.volumeLevel);
+            }
+            if (editingSnapshot.zoomToolAmount !== undefined && editingSnapshot.zoomToolAmount !== zoomToolAmount) {
+                setZoomToolAmount(editingSnapshot.zoomToolAmount);
+            }
+            if (editingSnapshot.zoomToolAmountX !== undefined && editingSnapshot.zoomToolAmountX !== zoomToolAmountX) {
+                setZoomToolAmountX(editingSnapshot.zoomToolAmountX);
+            }
+            if (editingSnapshot.zoomToolAmountY !== undefined && editingSnapshot.zoomToolAmountY !== zoomToolAmountY) {
+                setZoomToolAmountY(editingSnapshot.zoomToolAmountY);
+            }
+            if (editingSnapshot.posX !== undefined && editingSnapshot.posX !== posX) {
+                setPosX(editingSnapshot.posX);
+            }
+            if (editingSnapshot.posY !== undefined && editingSnapshot.posY !== posY) {
+                setPosY(editingSnapshot.posY);
+            }
+            if (editingSnapshot.flipH !== undefined && editingSnapshot.flipH !== flipH) {
+                setFlipH(editingSnapshot.flipH);
+            }
+            if (editingSnapshot.flipV !== undefined && editingSnapshot.flipV !== flipV) {
+                setFlipV(editingSnapshot.flipV);
+            }
+            if (editingSnapshot.cornerRadius !== undefined && editingSnapshot.cornerRadius !== cornerRadius) {
+                setCornerRadius(editingSnapshot.cornerRadius);
+            }
+            if (editingSnapshot.cropCenterX !== undefined && editingSnapshot.cropCenterX !== cropCenterX) {
+                setCropCenterX(editingSnapshot.cropCenterX);
+            }
+            if (editingSnapshot.cropCenterY !== undefined && editingSnapshot.cropCenterY !== cropCenterY) {
+                setCropCenterY(editingSnapshot.cropCenterY);
+            }
+            if (editingSnapshot.cropWidthPct !== undefined && editingSnapshot.cropWidthPct !== cropWidthPct) {
+                setCropWidthPct(editingSnapshot.cropWidthPct);
+            }
+            if (editingSnapshot.cropHeightPct !== undefined && editingSnapshot.cropHeightPct !== cropHeightPct) {
+                setCropHeightPct(editingSnapshot.cropHeightPct);
+            }
+            if (editingSnapshot.aspectRatio !== undefined && editingSnapshot.aspectRatio !== aspectRatio) {
+                if (typeof editingSnapshot.aspectRatio === 'object') {
+                    const { width, height, name } = editingSnapshot.aspectRatio;
+                    if (width && height) {
+                        applyAspectRatio(width, height, name || 'Custom');
+                    }
+                }
+            }
+            if (editingSnapshot.activePreviewId !== undefined && editingSnapshot.activePreviewId !== activePreviewId) {
+                setActivePreviewId(editingSnapshot.activePreviewId);
+            }
+            if (editingSnapshot.audioTracks !== undefined && JSON.stringify(editingSnapshot.audioTracks) !== JSON.stringify(audioTracks)) {
+                setAudioTracks(editingSnapshot.audioTracks);
+            }
+            if (editingSnapshot.bgMusicUrl !== undefined && editingSnapshot.bgMusicUrl !== bgMusicUrl) {
+                setBgMusicUrl(editingSnapshot.bgMusicUrl);
+            }
+
+            setTimeout(() => {
+                isRestoringFromUndoRef.current = false;
+            }, 0);
+        }
+    }, [editingSnapshot]);
 
     const applyEffectToAllClips = (eff: any) => {
         const nextSettings = { ...clipSettings };
@@ -4098,19 +4303,59 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         if (selectedEffect === 'hdr') return 'contrast(1.6) brightness(1.2) saturate(1.4)';
         if (selectedEffect === 'vivid') return 'contrast(1.3) brightness(1.1) saturate(2.5)';
 
-        if (selectedFilter === 'black-white') return 'grayscale(1) contrast(1.15)';
-        if (selectedFilter === 'cinematic') return 'contrast(1.45) brightness(1.1) saturate(1.25)';
-        if (selectedFilter === 'moody') return 'contrast(1.2) brightness(0.95) saturate(0.95) sepia(0.08)';
-        if (selectedFilter === 'warm-tone') return 'sepia(0.2) saturate(1.25) hue-rotate(-8deg) brightness(1.05)';
+        if (selectedFilter === 'black-white' || selectedFilter === 'pro-noir') return 'grayscale(1) contrast(1.35) brightness(0.95)';
+        if (selectedFilter === 'cinematic' || selectedFilter === 'pro-film-look') return 'contrast(1.35) brightness(1.05) saturate(1.15) sepia(0.08)';
+        if (selectedFilter === 'moody') return 'brightness(0.85) contrast(1.35) saturate(0.95)';
+        if (selectedFilter === 'warm-tone' || selectedFilter === 'pro-temperature') return 'sepia(0.25) saturate(1.2) hue-rotate(-10deg) brightness(1.05)';
         if (selectedFilter === 'cool-tone') return 'saturate(1.1) hue-rotate(14deg) brightness(0.98)';
-        if (selectedFilter === 'vintage') return 'sepia(0.35) contrast(0.95) brightness(1.05) saturate(0.9)';
-        if (selectedFilter === 'teal-orange') return 'contrast(1.3) saturate(1.25) hue-rotate(-7deg) brightness(1.02)';
-        if (selectedFilter === 'dreamy-glow') return 'contrast(0.95) saturate(1.15) brightness(1.05)';
-        if (selectedFilter === 'film-look') return 'contrast(1.2) brightness(1.05) saturate(1.15)';
-        if (selectedFilter === 'vhs') return 'contrast(1.15) saturate(1.2) hue-rotate(2deg) sepia(0.05)';
+        if (selectedFilter === 'vintage' || selectedFilter === 'pro-vintage') return 'sepia(0.4) contrast(0.95) brightness(1.05) saturate(0.85)';
+        if (selectedFilter === 'teal-orange' || selectedFilter === 'pro-teal-orange') return 'contrast(1.35) saturate(1.3) hue-rotate(-12deg) brightness(1.02)';
+        if (selectedFilter === 'dreamy-glow' || selectedFilter === 'pro-dream') return 'contrast(0.92) saturate(1.2) brightness(1.1)';
+        if (selectedFilter === 'film-look' || selectedFilter === 'pro-fade-film') return 'contrast(0.85) brightness(1.15) saturate(0.9)';
+        if (selectedFilter === 'vhs' || selectedFilter === 'pro-vhs-noise') return 'contrast(1.2) saturate(1.25) hue-rotate(5deg) sepia(0.08)';
         if (selectedFilter === 'soft-skin') return 'brightness(1.05) saturate(1.15) contrast(0.95)';
-        if (selectedFilter === 'neon-glow') return 'saturate(1.4) brightness(1.05) contrast(1.2) hue-rotate(10deg)';
-        if (selectedFilter === 'hdr-pop') return 'contrast(1.55) brightness(1.15) saturate(1.45)';
+        if (selectedFilter === 'neon-glow' || selectedFilter === 'pro-glow') return 'saturate(1.5) brightness(1.1) contrast(1.2) hue-rotate(8deg)';
+        if (selectedFilter === 'hdr-pop' || selectedFilter === 'pro-hdr') return 'contrast(1.6) brightness(1.15) saturate(1.5)';
+        if (selectedFilter === 'pro-brightness') return 'brightness(1.3)';
+        if (selectedFilter === 'pro-contrast') return 'contrast(1.45)';
+        if (selectedFilter === 'pro-saturation') return 'saturate(1.7)';
+        if (selectedFilter === 'pro-exposure') return 'brightness(1.35) contrast(1.15)';
+        if (selectedFilter === 'pro-gamma') return 'contrast(1.25) brightness(1.1)';
+        if (selectedFilter === 'pro-tint') return 'hue-rotate(30deg) saturate(1.1)';
+        if (selectedFilter === 'pro-vibrance') return 'saturate(1.45) contrast(1.1)';
+        if (selectedFilter === 'pro-hue-rotate') return 'hue-rotate(90deg)';
+        if (selectedFilter === 'pro-color-balance') return 'contrast(1.15) saturate(1.2) hue-rotate(10deg)';
+        if (selectedFilter === 'pro-sepia') return 'sepia(0.9) contrast(1.1)';
+        if (selectedFilter === 'pro-bleach-bypass') return 'contrast(1.55) saturate(0.35) brightness(1.05)';
+        if (selectedFilter === 'pro-soft-glow') return 'contrast(0.92) saturate(1.2) brightness(1.1)';
+        if (selectedFilter === 'pro-gaussian-blur') return 'blur(4px)';
+        if (selectedFilter === 'pro-box-blur') return 'blur(3px) contrast(1.05)';
+        if (selectedFilter === 'pro-motion-blur') return 'blur(2.5px) contrast(1.15)';
+        if (selectedFilter === 'pro-radial-blur') return 'blur(3.5px) saturate(1.1)';
+        if (selectedFilter === 'pro-lens-blur') return 'blur(5px) brightness(1.05)';
+        if (selectedFilter === 'pro-fisheye') return 'contrast(1.25) saturate(1.15)';
+        if (selectedFilter === 'pro-wave') return 'hue-rotate(20deg) contrast(1.1)';
+        if (selectedFilter === 'pro-ripple') return 'contrast(1.15) saturate(1.1)';
+        if (selectedFilter === 'pro-bulge') return 'contrast(1.2) brightness(1.05)';
+        if (selectedFilter === 'pro-twirl') return 'hue-rotate(-20deg) contrast(1.1)';
+        if (selectedFilter === 'pro-lens-flare') return 'brightness(1.25) contrast(1.12) saturate(1.25)';
+        if (selectedFilter === 'pro-light-leak') return 'brightness(1.18) sepia(0.18) saturate(1.25)';
+        if (selectedFilter === 'pro-bloom') return 'brightness(1.15) contrast(1.08) saturate(1.18)';
+        if (selectedFilter === 'pro-shadow') return 'brightness(0.85) contrast(1.35) saturate(0.95)';
+        if (selectedFilter === 'pro-film-grain') return 'contrast(1.15) brightness(1.02) saturate(1.05)';
+        if (selectedFilter === 'pro-dust') return 'sepia(0.25) contrast(0.95) brightness(1.02)';
+        if (selectedFilter === 'pro-rgb-split') return 'contrast(1.25) saturate(1.35)';
+        if (selectedFilter === 'pro-static-noise') return 'contrast(1.35) grayscale(0.25) brightness(1.05)';
+        if (selectedFilter === 'pro-pixelate') return 'contrast(1.25) saturate(1.1)';
+        if (selectedFilter === 'pro-cartoon') return 'contrast(1.65) saturate(1.55)';
+        if (selectedFilter === 'pro-sketch') return 'grayscale(1) contrast(2.2) brightness(1.1)';
+        if (selectedFilter === 'pro-posterize') return 'contrast(1.85) saturate(1.45)';
+        if (selectedFilter === 'pro-oil-painting') return 'contrast(1.35) saturate(1.45) brightness(1.05)';
+        if (selectedFilter === 'pro-shake') return 'contrast(1.12) saturate(1.08)';
+        if (selectedFilter === 'pro-zoom-pulse') return 'contrast(1.18) brightness(1.05)';
+        if (selectedFilter === 'pro-slow-zoom') return 'contrast(1.08)';
+        if (selectedFilter === 'pro-flash') return 'brightness(1.35) contrast(1.2)';
+        if (selectedFilter === 'pro-strobe') return 'brightness(1.25) contrast(1.35)';
 
         return 'none';
     };
@@ -4850,27 +5095,25 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                     <div className="h-4 w-[1px] bg-white/10" />
 
-                    {/* Top Header Undo / Redo Text Control Buttons */}
-                    <div className="flex items-center gap-2">
+                    {/* Top Header Undo / Redo Icon Control Buttons */}
+                    <div className="flex items-center gap-1.5">
                         <button
                             onClick={undo}
                             disabled={!canUndo}
                             title="Undo (Ctrl+Z)"
                             aria-label="Undo"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
+                            className="flex items-center justify-center p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
                         >
-                            <Undo2 className="w-3.5 h-3.5" />
-                            <span>Undo</span>
+                            <Undo2 className="w-4 h-4" />
                         </button>
                         <button
                             onClick={redo}
                             disabled={!canRedo}
                             title="Redo (Ctrl+Y)"
                             aria-label="Redo"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
+                            className="flex items-center justify-center p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
                         >
-                            <Redo2 className="w-3.5 h-3.5" />
-                            <span>Redo</span>
+                            <Redo2 className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -5100,7 +5343,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                     {/* Effects List */}
                                                     <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-500/20 [&::-webkit-scrollbar-thumb]:rounded-full">
                                                         {/* Collapsible Categories */}
-                                                        {['glitch', 'blur', 'cinematic', 'vintage', 'color', 'light', 'motion', 'camera', 'stylize', 'creative', 'distortion', 'retro'].map(category => {
+                                                        {['color', 'cinematic', 'blur', 'distortion', 'light', 'noise', 'stylize', 'motion', 'camera', 'glitch', 'vintage', 'retro', 'creative'].map(category => {
                                                             if (proCategoryFilter !== 'all' && proCategoryFilter !== category) return null;
                                                             
                                                             // Filter effects for this category
@@ -5121,9 +5364,9 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                 category === 'vintage' ? CassetteTape :
                                                                 category === 'color' ? Palette :
                                                                 category === 'light' ? SunDim :
+                                                                category === 'noise' ? Tv :
                                                                 category === 'motion' ? Activity :
                                                                 category === 'stylize' ? Sparkles :
-                                                                category === 'creative' ? Wand2 :
                                                                 category === 'retro' ? Clock3 : Waves;
 
                                                             return (
@@ -5590,46 +5833,73 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                             </div>
                                         )}
 
-                                        {/* ── FILTERS panel ── */}
+                                        {/* ── FILTERS panel (50 PRO Filters) ── */}
                                         {leftTab === 'filters' && (
-                                            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {[
-                                                        { id: 'none',         label: 'No Filter',   icon: CircleOff,   color: '#94a3b8' },
-                                                        { id: 'cinematic',    label: 'Cinematic',   icon: Clapperboard,color: '#a78bfa' },
-                                                        { id: 'moody',        label: 'Moody',       icon: MoonStar,    color: '#6366f1' },
-                                                        { id: 'warm-tone',    label: 'Warm',        icon: Sun,         color: '#f59e0b' },
-                                                        { id: 'cool-tone',    label: 'Cool',        icon: Snowflake,   color: '#38bdf8' },
-                                                        { id: 'vintage',      label: 'Vintage',     icon: Clock3,      color: '#fb923c' },
-                                                        { id: 'black-white',  label: 'B&W',         icon: Contrast,    color: '#94a3b8' },
-                                                        { id: 'teal-orange',  label: 'Teal+Orange', icon: Palette,     color: '#2dd4bf' },
-                                                        { id: 'dreamy-glow',  label: 'Dreamy',      icon: Sparkles,    color: '#e879f9' },
-                                                        { id: 'film-look',    label: 'Film Look',   icon: Film,        color: '#c084fc' },
-                                                        { id: 'vhs',          label: 'VHS',         icon: Tv,          color: '#4ade80' },
-                                                        { id: 'soft-skin',    label: 'Soft Skin',   icon: Smile,       color: '#f9a8d4' },
-                                                        { id: 'neon-glow',    label: 'Neon',        icon: Lightbulb,   color: '#facc15' },
-                                                        { id: 'hdr-pop',      label: 'HDR Pop',     icon: Aperture,    color: '#f87171' },
-                                                    ].map((f) => {
-                                                        const isActive = selectedFilter === f.id;
-                                                        const Icon = f.icon;
-                                                        return (
+                                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#0b0d26]">
+                                                <div className="flex-1 flex flex-col min-h-0 p-3 space-y-2.5 overflow-hidden">
+                                                    {/* Category Filter Chips */}
+                                                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-scrollbar">
+                                                        {['all', 'color', 'cinematic', 'blur', 'distortion', 'light', 'noise', 'stylize', 'motion'].map((cat) => (
                                                             <button
-                                                                key={f.id}
-                                                                onClick={() => setSelectedFilter(f.id as any)}
-                                                                type="button"
-                                                                className={`relative flex flex-col items-center justify-center gap-2 h-[80px] rounded-xl border transition-all duration-200 group overflow-hidden ${
-                                                                    isActive
-                                                                        ? 'bg-pink-500/15 border-pink-400/60 shadow-[0_0_16px_rgba(236,72,153,0.25)] scale-[1.02]'
-                                                                        : 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5'
+                                                                key={cat}
+                                                                onClick={() => setProCategoryFilter(cat as any)}
+                                                                className={`px-2 py-0.5 rounded-full text-[7.5px] font-bold uppercase border transition-all cursor-pointer ${
+                                                                    proCategoryFilter === cat
+                                                                        ? 'bg-pink-500/20 border-pink-500/40 text-pink-300'
+                                                                        : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'
                                                                 }`}
                                                             >
-                                                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 40%, ${f.color}18 0%, transparent 70%)` }} />
-                                                                <Icon size={20} className="relative z-10 transition-transform duration-200 group-hover:scale-110" style={{ color: isActive ? '#f9a8d4' : f.color }} />
-                                                                <span className={`relative z-10 text-[8px] font-bold uppercase tracking-wider text-center leading-tight px-1 line-clamp-2 ${isActive ? 'text-pink-200' : 'text-slate-400 group-hover:text-slate-200'}`}>{f.label}</span>
-                                                                {isActive && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-pink-400" />}
+                                                                {cat}
                                                             </button>
-                                                        );
-                                                    })}
+                                                        ))}
+                                                    </div>
+
+                                                    {/* 50 Filters Grid */}
+                                                    <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            {PRO_50_FILTERS.filter(f => {
+                                                                if (proCategoryFilter !== 'all' && f.category !== proCategoryFilter) return false;
+                                                                if (proSearchQuery.trim() && !f.label.toLowerCase().includes(proSearchQuery.toLowerCase())) return false;
+                                                                return true;
+                                                            }).map((f) => {
+                                                                const isActive = selectedFilter === f.id;
+                                                                const Icon = f.icon;
+                                                                return (
+                                                                    <button
+                                                                        key={f.id}
+                                                                        onClick={() => {
+                                                                            const next = isActive ? 'none' : f.id;
+                                                                            setSelectedFilter(next as any);
+                                                                            saveToUndo({ selectedFilter: next });
+                                                                        }}
+                                                                        type="button"
+                                                                        title={`${f.label} — ${f.description}`}
+                                                                        className={`relative flex flex-col items-center justify-center gap-1.5 h-[80px] p-1 rounded-xl border transition-all duration-200 group overflow-hidden ${
+                                                                            isActive
+                                                                                ? 'bg-pink-500/20 border-pink-400/70 shadow-[0_0_16px_rgba(236,72,153,0.3)] scale-[1.02]'
+                                                                                : 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5'
+                                                                        }`}
+                                                                    >
+                                                                        <div
+                                                                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                                                            style={{ background: `radial-gradient(circle at 50% 40%, ${f.color}25 0%, transparent 70%)` }}
+                                                                        />
+                                                                        <Icon
+                                                                            size={18}
+                                                                            className="relative z-10 transition-transform duration-200 group-hover:scale-110"
+                                                                            style={{ color: isActive ? '#f472b6' : f.color }}
+                                                                        />
+                                                                        <span className={`relative z-10 text-[7.5px] font-bold uppercase tracking-wider text-center leading-tight px-0.5 line-clamp-2 ${isActive ? 'text-pink-200' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                                                            {f.label}
+                                                                        </span>
+                                                                        {isActive && (
+                                                                            <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_6px_#f472b6]" />
+                                                                        )}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
@@ -6251,16 +6521,24 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                             </div>
 
                             {/* Hardware Transport Deck buttons */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
                                 <button
                                     onClick={undo}
                                     disabled={!canUndo}
                                     title="Undo (Ctrl+Z)"
                                     aria-label="Undo action"
-                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/30 text-slate-200 hover:text-white disabled:opacity-25 disabled:hover:bg-white/5 disabled:hover:text-slate-400 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs"
+                                    className="flex items-center justify-center p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/30 text-slate-200 hover:text-white disabled:opacity-25 disabled:hover:bg-white/5 disabled:hover:text-slate-400 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs"
                                 >
                                     <Undo2 className="w-3.5 h-3.5" />
-                                    <span>Undo</span>
+                                </button>
+                                <button
+                                    onClick={redo}
+                                    disabled={!canRedo}
+                                    title="Redo (Ctrl+Y)"
+                                    aria-label="Redo action"
+                                    className="flex items-center justify-center p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/30 text-slate-200 hover:text-white disabled:opacity-25 disabled:hover:bg-white/5 disabled:hover:text-slate-400 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs"
+                                >
+                                    <Redo2 className="w-3.5 h-3.5" />
                                 </button>
 
                                 <button
@@ -6307,17 +6585,6 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                     className="p-1 text-slate-400 hover:text-white transition-colors"
                                 >
                                     {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-purple-400" />}
-                                </button>
-
-                                <button
-                                    onClick={redo}
-                                    disabled={!canRedo}
-                                    title="Redo (Ctrl+Y)"
-                                    aria-label="Redo action"
-                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/30 text-slate-200 hover:text-white disabled:opacity-25 disabled:hover:bg-white/5 disabled:hover:text-slate-400 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs"
-                                >
-                                    <Redo2 className="w-3.5 h-3.5" />
-                                    <span>Redo</span>
                                 </button>
 
                                 <div className="w-[1px] h-4 bg-white/10 mx-1" />

@@ -18,7 +18,7 @@ export interface UseUndoRedoReturn<T> {
   reset: (newInitialState?: T) => void;
 }
 
-export function useUndoRedo<T>(initialState: T, maxHistoryDepth = 50): UseUndoRedoReturn<T> {
+export function useUndoRedo<T>(initialState: T, maxHistoryDepth = 100): UseUndoRedoReturn<T> {
   const [history, setHistory] = useState<HistoryState<T>>({
     past: [],
     present: initialState,

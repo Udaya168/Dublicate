@@ -6,6 +6,7 @@ export type EffectCategory =
   | 'distortion'
   | 'motion'
   | 'light'
+  | 'noise'
   | 'retro'
   | 'color'
   | 'vintage'

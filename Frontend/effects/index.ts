@@ -120,6 +120,7 @@ import {
   watercolorEffect
 } from './additionalEffects';
 
+import { PRO_50_EFFECTS } from './pro50Effects';
 import { EffectModule } from './types';
 
 export { type EffectModule } from './types';
@@ -132,6 +133,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   distortion: '#8b5cf6',
   motion: '#6366f1',
   light: '#f59e0b',
+  noise: '#f43f5e',
   retro: '#e11d48',
   color: '#10b981',
   vintage: '#f97316',
@@ -259,6 +261,9 @@ const baseEffectsRegistry: Record<string, EffectModule> = {
   'pro-mosaic': mosaicEffect,
   'pro-threshold': thresholdEffect,
   'pro-watercolor': watercolorEffect,
+
+  // Add 50 PRO Effects
+  ...Object.fromEntries(PRO_50_EFFECTS.map(eff => [eff.id, eff]))
 };
 
 // Ensure all registered effect modules have a previewColor property
