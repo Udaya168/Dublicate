@@ -99,7 +99,8 @@ import { generateThumbnail } from "@/lib/thumbnail";
 import { CustomRatioModal } from "./components/CustomRatioModal";
 import { SlidersHorizontal, GripVertical, CassetteTape, Target, Cloud, Eye, Columns, SunDim, Flame, Disc, Grid3X3, Flower2, ChevronUp, ChevronDown } from "lucide-react";
 import { TimelineHub } from "./components/TimelineHub";
-import { getEffectModule, getAllProEffects, getEffectsByCategory } from './effects';
+import { ALL_EFFECTS, EFFECTS_BY_CATEGORY, getEffectById } from './effects';
+import { ALL_TRANSITIONS, TRANSITIONS_BY_CATEGORY, getTransitionById } from './transitions';
 import { useUndoRedo } from "./components/hooks/useUndoRedo";
 
 import { PremiumModal } from "@/components/premium-modal";
@@ -352,9 +353,10 @@ const CAPTION_STYLE_PRESETS = [
 const QUICK_TOOLS = [
     { id: 'effects', icon: Sparkle, label: 'EFFECTS', color: '#facc15' },
     { id: 'transitions', icon: Layers, label: 'TRANSITIONS', color: '#818cf8' },
+    { id: 'split', icon: Scissors, label: 'SPLIT', color: '#ec4899' },
+    { id: 'trim', icon: Scissors, label: 'TRIM', color: '#34d399' },
     { id: 'filters', icon: Palette, label: 'FILTERS', color: '#fb7185' },
     { id: 'speed', icon: Timer, label: 'SPEED', color: '#a78bfa' },
-    { id: 'trim', icon: Scissors, label: 'TRIM', color: '#34d399' },
     { id: 'copy', icon: Copy, label: 'COPY', color: '#38bdf8' },
     { id: 'text-tool', icon: Type, label: 'TEXT', color: '#f472b6' },
     { id: 'rotate', icon: RotateCw, label: 'ROTATE', color: '#c084fc' },
@@ -764,29 +766,6 @@ const FilmoraLeftPanel = memo(({
                         ) : (
                             <>
                                 <div>
-                                    <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block mb-2">History & Undo/Redo Options</span>
-                                    <div className="grid grid-cols-2 gap-1.5 mb-3">
-                                        <button
-                                            onClick={undo}
-                                            disabled={!canUndo}
-                                            title="Undo last action (Ctrl+Z)"
-                                            className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-[9px] shadow-sm"
-                                        >
-                                            <Undo2 className="w-3.5 h-3.5" />
-                                            <span>Undo Action</span>
-                                        </button>
-                                        <button
-                                            onClick={redo}
-                                            disabled={!canRedo}
-                                            title="Redo action (Ctrl+Y)"
-                                            className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-[9px] shadow-sm"
-                                        >
-                                            <Redo2 className="w-3.5 h-3.5" />
-                                            <span>Redo Action</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
                                     <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Smart Auto Features</span>
                                     <div className="grid grid-cols-2 gap-1.5">
                                         {[
@@ -978,6 +957,9 @@ const ToolInspector = memo(({
     const [newCaptionText, setNewCaptionText] = useState('');
     const [newCaptionStart, setNewCaptionStart] = useState(0);
     const [newCaptionEnd, setNewCaptionEnd] = useState(3);
+    const [activeEffectCategory, setActiveEffectCategory] = useState<'camera' | 'cinematic' | 'retro'>('camera');
+    const [activeTransitionCategory, setActiveTransitionCategory] = useState<'basic' | 'zoom' | 'swipe'>('basic');
+    const handleSplitClip = () => {};
 
     switch (activeTool) {
         case 'filters':
@@ -1028,340 +1010,129 @@ const ToolInspector = memo(({
                     </div>
                 </div>
             );
-        case 'effects':
+        case 'effects': {
+            const currentCategoryEffects = EFFECTS_BY_CATEGORY[activeEffectCategory] || ALL_EFFECTS;
             return (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Effects</span>
-                        <span className="text-[8px] text-slate-500 font-bold uppercase">Visual FX</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Effects ({ALL_EFFECTS.length} Total)</span>
+                        <span className="text-[8px] text-purple-400 font-bold uppercase">{activeEffectCategory} (50)</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-[16px] max-h-[350px] overflow-y-auto pr-2 pb-4 [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gradient-to-b [&::-webkit-scrollbar-thumb]:from-[#7C3AED] [&::-webkit-scrollbar-thumb]:to-[#A855F7] [&::-webkit-scrollbar-thumb]:rounded-full">
-                        {[
-                            { id: 'none', label: 'No Effect', icon: Ban },
-                            { id: 'fade-in', label: 'Fade In', icon: Sunrise },
-                            { id: 'velocity', label: 'Velocity Edit', icon: Zap },
-                            { id: 'motion-blur', label: 'Motion Blur', icon: Wind },
-                            { id: 'shake', label: 'Shake', icon: Vibrate },
-                            { id: 'flash-effect', label: 'Flash Transition', icon: Flashlight },
-                            { id: 'rgb-split', label: 'RGB Split', icon: Palette },
-                            { id: 'film-grain', label: 'Film Grain', icon: Film },
-                            { id: 'soft-glow', label: 'Soft Glow', icon: Sparkles },
-                            { id: 'old-tv', label: 'Old TV', icon: Tv },
-                            { id: 'slow-motion', label: 'Slow Motion', icon: Clock3 },
-                            { id: 'smooth-zoom', label: 'Smooth Zoom', icon: ZoomIn },
-                            { id: 'glitch', label: 'Glitch', icon: ScanLine },
-                            { id: 'motion-tracking', label: 'Motion Tracking', icon: Crosshair },
-                        ].map((eff) => (
+
+                    {/* Category Tabs: Camera, Cinematic, Retro */}
+                    <div className="flex gap-1.5 p-1 bg-white/5 rounded-xl border border-white/10">
+                        {(['camera', 'cinematic', 'retro'] as const).map((cat) => (
                             <button
-                                key={eff.id}
-                                onClick={() => setSelectedEffect(eff.id as any)}
+                                key={cat}
                                 type="button"
-                                className={`flex flex-col items-center justify-center w-full h-[95px] rounded-[20px] backdrop-blur-[20px] transition-all duration-300 group ${selectedEffect === eff.id
-                                    ? 'bg-gradient-to-b from-[rgba(168,85,247,0.18)] to-[rgba(124,58,237,0.08)] border border-[#A855F7] shadow-[0_0_25px_rgba(168,85,247,0.35)] scale-[1.03]'
-                                    : 'bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:-translate-y-[4px] hover:scale-[1.04] hover:border-[#A855F7] hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] cursor-pointer'
-                                    }`}
+                                onClick={() => setActiveEffectCategory(cat)}
+                                className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${activeEffectCategory === cat ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                             >
-                                <eff.icon
-                                    size={28}
-                                    strokeWidth={2.2}
-                                    className={`transition-colors duration-300 ${selectedEffect === eff.id ? 'text-[#FFD84D]' : 'text-[#B794F4] group-hover:drop-shadow-[0_0_8px_rgba(183,148,244,0.8)]'
-                                        }`}
-                                />
-                                <span className={`mt-[12px] text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-center leading-tight px-2 line-clamp-2 ${selectedEffect === eff.id ? 'text-white' : 'text-white/90'
-                                    }`}>
-                                    {eff.label}
-                                </span>
+                                {cat} (50)
                             </button>
                         ))}
                     </div>
 
-                    {selectedEffect === 'blur' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Blur Amount</span>
-                                <span>{blurAmount}px</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={30}
-                                value={blurAmount}
-                                onChange={(e) => setBlurAmount(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'color-correction' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-2.5">
-                            <div>
-                                <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300 mb-0.5">
-                                    <span>Brightness</span>
-                                    <span>{brightness.toFixed(1)}</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min={0.1}
-                                    max={3}
-                                    step={0.1}
-                                    value={brightness}
-                                    onChange={(e) => setBrightness(Number(e.target.value))}
-                                    className="w-full accent-purple-400"
-                                />
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300 mb-0.5">
-                                    <span>Contrast</span>
-                                    <span>{contrast.toFixed(1)}</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min={0.1}
-                                    max={3}
-                                    step={0.1}
-                                    value={contrast}
-                                    onChange={(e) => setContrast(Number(e.target.value))}
-                                    className="w-full accent-purple-400"
-                                />
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300 mb-0.5">
-                                    <span>Saturation</span>
-                                    <span>{saturation.toFixed(1)}</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={3}
-                                    step={0.1}
-                                    value={saturation}
-                                    onChange={(e) => setSaturation(Number(e.target.value))}
-                                    className="w-full accent-purple-400"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {selectedEffect === 'slow-motion' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Speed</span>
-                                <span>{slowMotionSpeed.toFixed(2)}x</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0.1}
-                                max={1}
-                                step={0.1}
-                                value={slowMotionSpeed}
-                                onChange={(e) => setSlowMotionSpeed(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'glitch' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Glitch Intensity</span>
-                                <span>{glitchIntensity.toFixed(1)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={3}
-                                step={0.5}
-                                value={glitchIntensity}
-                                onChange={(e) => setGlitchIntensity(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'velocity' && (() => {
-                        const safeVelocitySpeed = typeof velocitySpeed === 'number' ? velocitySpeed : 1.5;
-                        return (
-                            <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                                <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                    <span>Velocity Ramp</span>
-                                    <span>{safeVelocitySpeed.toFixed(2)}x</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min={0.5}
-                                    max={3}
-                                    step={0.05}
-                                    value={safeVelocitySpeed}
-                                    onChange={(e) => setVelocitySpeed(Number(e.target.value))}
-                                    className="w-full accent-purple-400"
-                                />
-                            </div>
-                        );
-                    })()}
-
-                    {selectedEffect === 'motion-blur' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Motion Blur</span>
-                                <span>{motionBlurAmount.toFixed(0)}px</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={12}
-                                step={1}
-                                value={motionBlurAmount}
-                                onChange={(e) => setMotionBlurAmount(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'shake' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Shake Strength</span>
-                                <span>{shakeStrength.toFixed(1)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={4}
-                                step={0.1}
-                                value={shakeStrength}
-                                onChange={(e) => setShakeStrength(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'flash-effect' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Flash Strength</span>
-                                <span>{flashIntensity.toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0.1}
-                                max={1}
-                                step={0.05}
-                                value={flashIntensity}
-                                onChange={(e) => setFlashIntensity(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'rgb-split' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>RGB Split</span>
-                                <span>{rgbSplitAmount.toFixed(0)}px</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={28}
-                                step={1}
-                                value={rgbSplitAmount}
-                                onChange={(e) => setRgbSplitAmount(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'smooth-zoom' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Smooth Zoom</span>
-                                <span>{(smoothZoomAmount * 100).toFixed(0)}%</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={0.7}
-                                step={0.05}
-                                value={smoothZoomAmount}
-                                onChange={(e) => setSmoothZoomAmount(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {selectedEffect === 'film-grain' && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300">
-                                <span>Grain Opacity</span>
-                                <span>{filmGrainOpacity.toFixed(2)}</span>
-                            </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={1}
-                                step={0.05}
-                                value={filmGrainOpacity}
-                                onChange={(e) => setFilmGrainOpacity(Number(e.target.value))}
-                                className="w-full accent-purple-400"
-                            />
-                        </div>
-                    )}
-
-                    {/* Settings inputs for text effects removed */}
+                    <div className="grid grid-cols-3 gap-[10px] max-h-[360px] overflow-y-auto pr-1 pb-4 [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-thumb]:bg-purple-500 [&::-webkit-scrollbar-thumb]:rounded-full">
+                        <button
+                            onClick={() => setSelectedEffect('none')}
+                            type="button"
+                            className={`flex flex-col items-center justify-center p-2 rounded-xl backdrop-blur-md transition-all ${selectedEffect === 'none' ? 'bg-purple-500/20 border border-purple-500 text-purple-300' : 'bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10'}`}
+                        >
+                            <Ban size={20} />
+                            <span className="mt-1 text-[8px] font-bold uppercase text-center line-clamp-1">No Effect</span>
+                        </button>
+                        {currentCategoryEffects.map((eff) => {
+                            const isSelected = selectedEffect === eff.id;
+                            return (
+                                <button
+                                    key={eff.id}
+                                    onClick={() => setSelectedEffect(eff.id)}
+                                    type="button"
+                                    className={`flex flex-col items-center justify-center p-2 h-[80px] rounded-xl backdrop-blur-md transition-all text-center group ${isSelected ? 'bg-purple-500/20 border border-purple-500 text-white shadow-lg shadow-purple-500/20 scale-[1.02]' : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:border-purple-500/50'}`}
+                                >
+                                    <Sparkles size={20} className={isSelected ? 'text-amber-400' : 'text-purple-400 group-hover:text-purple-300'} />
+                                    <span className="mt-1 text-[8px] font-bold uppercase tracking-wider line-clamp-2 leading-tight">
+                                        {eff.name}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             );
-        case 'transitions':
+        }
+        case 'transitions': {
+            const currentCategoryTransitions = TRANSITIONS_BY_CATEGORY[activeTransitionCategory] || ALL_TRANSITIONS;
             return (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Transitions</span>
-                        <span className="text-[8px] text-slate-500 font-bold uppercase">Cuts</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Transitions ({ALL_TRANSITIONS.length} Total)</span>
+                        <span className="text-[8px] text-purple-400 font-bold uppercase">{activeTransitionCategory} (50)</span>
                     </div>
+
                     <div className="rounded border border-white/5 bg-white/[0.02] px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-slate-400 text-center">
                         {activePreviewId
                             ? `Clip: ${activePreviewId.slice(0, 8)} • ${clipTransitions[activePreviewId] || 'none'}`
                             : 'Select clip from Timeline first'}
                     </div>
-                    <div className="grid grid-cols-3 gap-[16px] max-h-[350px] overflow-y-auto pr-2 pb-4 [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gradient-to-b [&::-webkit-scrollbar-thumb]:from-[#7C3AED] [&::-webkit-scrollbar-thumb]:to-[#A855F7] [&::-webkit-scrollbar-thumb]:rounded-full">
-                        {[
-                            { id: 'fade-transition', label: 'Fade Transition', icon: Droplets },
-                            { id: 'zoom-transition', label: 'Zoom Transition', icon: ZoomIn },
-                            { id: 'blur-transition', label: 'Blur Transition', icon: Wind },
-                            { id: 'swipe-transition', label: 'Swipe Transition', icon: MoveHorizontal },
-                            { id: 'spin-transition', label: 'Spin Transition', icon: RotateCw },
-                            { id: 'whip-pan-transition', label: 'Whip Pan Transition', icon: MoveRight },
-                            { id: 'glitch-transition', label: 'Glitch Transition', icon: ScanLine },
-                            { id: 'mask-transition', label: 'Mask Transition', icon: Square },
-                            { id: 'flash-transition', label: 'Flash Transition', icon: Zap },
-                            { id: 'camera-shake-transition', label: 'Camera Shake Transition', icon: Vibrate },
-                            { id: 'match-cut-transition', label: 'Match Cut Transition', icon: Scissors },
-                            { id: 'speed-ramp-transition', label: 'Speed Ramp Transition', icon: Gauge },
-                        ].map((tr) => (
+
+                    {/* Category Tabs: Basic, Zoom, Swipe */}
+                    <div className="flex gap-1.5 p-1 bg-white/5 rounded-xl border border-white/10">
+                        {(['basic', 'zoom', 'swipe'] as const).map((cat) => (
                             <button
-                                key={tr.id}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    applyTransitionForActiveClip(tr.id as any);
-                                }}
+                                key={cat}
                                 type="button"
-                                className={`flex flex-col items-center justify-center w-full h-[95px] rounded-[20px] backdrop-blur-[20px] transition-all duration-300 group ${activePreviewId && clipTransitions[activePreviewId] === tr.id
-                                    ? 'bg-gradient-to-b from-[rgba(168,85,247,0.18)] to-[rgba(124,58,237,0.08)] border border-[#A855F7] shadow-[0_0_25px_rgba(168,85,247,0.35)] scale-[1.03]'
-                                    : 'bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:-translate-y-[4px] hover:scale-[1.04] hover:border-[#A855F7] hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] cursor-pointer'
-                                    }`}
+                                onClick={() => setActiveTransitionCategory(cat)}
+                                className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${activeTransitionCategory === cat ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                             >
-                                <tr.icon
-                                    size={28}
-                                    strokeWidth={2.2}
-                                    className={`transition-colors duration-300 ${activePreviewId && clipTransitions[activePreviewId] === tr.id ? 'text-[#FFD84D]' : 'text-[#B794F4] group-hover:drop-shadow-[0_0_8px_rgba(183,148,244,0.8)]'
-                                        }`}
-                                />
-                                <span className={`mt-[12px] text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-center leading-tight px-2 line-clamp-2 ${activePreviewId && clipTransitions[activePreviewId] === tr.id ? 'text-white' : 'text-white/90'
-                                    }`}>
-                                    {tr.label}
-                                </span>
+                                {cat} (50)
                             </button>
                         ))}
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-[10px] max-h-[360px] overflow-y-auto pr-1 pb-4 [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-thumb]:bg-purple-500 [&::-webkit-scrollbar-thumb]:rounded-full">
+                        {currentCategoryTransitions.map((tr) => {
+                            const isSelected = activePreviewId && clipTransitions[activePreviewId] === tr.id;
+                            return (
+                                <button
+                                    key={tr.id}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        applyTransitionForActiveClip(tr.id as any);
+                                    }}
+                                    type="button"
+                                    className={`flex flex-col items-center justify-center p-2 h-[80px] rounded-xl backdrop-blur-md transition-all text-center group ${isSelected ? 'bg-purple-500/20 border border-purple-500 text-white shadow-lg shadow-purple-500/20 scale-[1.02]' : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:border-purple-500/50'}`}
+                                >
+                                    <Layers size={20} className={isSelected ? 'text-amber-400' : 'text-purple-400 group-hover:text-purple-300'} />
+                                    <span className="mt-1 text-[8px] font-bold uppercase tracking-wider line-clamp-2 leading-tight">
+                                        {tr.name}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+        case 'split':
+            return (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Split Tool</span>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase">Cut Clip</span>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <p className="text-[10px] text-slate-300">Place playhead at desired split position and click below.</p>
+                        <button
+                            type="button"
+                            onClick={handleSplitClip}
+                            disabled={!activePreviewId}
+                            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            ✂️ Split Active Clip at Playhead
+                        </button>
                     </div>
                 </div>
             );
@@ -2404,33 +2175,36 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             base = `translate(${posX}px, ${posY}px) scale(${scaleX}, ${scaleY}) rotate(${rotationDegrees}deg) `;
         }
         
-        const video = videoRef.current;
-        const tVal = video ? video.currentTime : 0;
-        const isWithinClassicTime = tVal >= classicStartTime && tVal <= classicEndTime;
-
-        let shakeOffset = '';
-        if (selectedEffect === 'shake' && isWithinClassicTime) {
-            const t = performance.now() / 100;
-            const x = Math.sin(t * 18) * shakeStrength * 2.5;
-            const y = Math.cos(t * 22) * shakeStrength * 2.5;
-            shakeOffset = `translate(${x}px, ${y}px) `;
+        if (selectedEffect && selectedEffect !== 'none') {
+            const effectObj = getEffectById(selectedEffect);
+            if (effectObj) {
+                const currentTime = videoRef.current ? videoRef.current.currentTime : 0;
+                if (effectObj.getDynamicStyle) {
+                    const dyn = effectObj.getDynamicStyle(currentTime);
+                    if (dyn.transformCss) base += ` ${dyn.transformCss}`;
+                } else if (effectObj.transformCss) {
+                    base += ` ${effectObj.transformCss}`;
+                }
+            }
         }
 
-        let rgbOffset = '';
-        if (selectedEffect === 'rgb-split' && isWithinClassicTime) {
-            const offset = rgbSplitAmount;
-            rgbOffset = `translate(${Math.sin(performance.now() / 150) * offset * 0.4}px, ${Math.cos(performance.now() / 180) * offset * 0.25}px) `;
-        }
+        return base;
+    };
 
-        let glitchOffset = '';
-        if (selectedEffect === 'glitch' && isWithinClassicTime) {
-            const t = performance.now() / 130;
-            const x = Math.sin(t * 25) * 2.5;
-            const y = Math.cos(t * 31) * 1.8;
-            glitchOffset = `translate(${x}px, ${y}px) `;
+    const getPreviewOverlayStyle = () => {
+        if (selectedEffect && selectedEffect !== 'none') {
+            const effectObj = getEffectById(selectedEffect);
+            if (effectObj) {
+                const currentTime = videoRef.current ? videoRef.current.currentTime : 0;
+                if (effectObj.getDynamicStyle) {
+                    const dyn = effectObj.getDynamicStyle(currentTime);
+                    if (dyn.overlayStyle) return dyn.overlayStyle;
+                } else if (effectObj.overlayStyle) {
+                    return effectObj.overlayStyle;
+                }
+            }
         }
-
-        return `${base}${shakeOffset}${rgbOffset}${glitchOffset}`;
+        return undefined;
     };
 
     const [cropCenterX, setCropCenterX] = useState(50);
@@ -2443,38 +2217,22 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const [clipTrimRanges, setClipTrimRanges] = useState<Record<string, { start: number; end: number | null }>>({});
     const [clipSettings, setClipSettings] = useState<Record<string, any>>({});
 
-    type TransitionType =
-        | 'none'
-        | 'fade-transition'
-        | 'zoom-transition'
-        | 'blur-transition'
-        | 'swipe-transition'
-        | 'spin-transition'
-        | 'whip-pan-transition'
-        | 'glitch-transition'
-        | 'mask-transition'
-        | 'flash-transition'
-        | 'camera-shake-transition'
-        | 'match-cut-transition'
-        | 'speed-ramp-transition'
-        | 'cross-dissolve'
-        | 'slide-left'
-        | 'slide-right'
-        | 'dip-black'
-        | 'dip-white';
+    type TransitionType = string;
 
-    const [clipTransitions, setClipTransitions] = useState<Record<string, TransitionType>>({});
+    const [clipTransitions, setClipTransitions] = useState<Record<string, string>>({});
     const [transitionOverlay, setTransitionOverlay] = useState<{
         fromId: string;
         toId: string;
-        type: TransitionType;
+        type: string;
         startAt: number;
         durationMs: number;
     } | null>(null);
     const [transitionProgress, setTransitionProgress] = useState(0);
+    const [activeEffectCategory, setActiveEffectCategory] = useState<'camera' | 'cinematic' | 'retro'>('camera');
+    const [activeTransitionCategory, setActiveTransitionCategory] = useState<'basic' | 'zoom' | 'swipe'>('basic');
     const [selectedFilter, setSelectedFilter] = useState<FilterType>('none');
     const [blurAmount, setBlurAmount] = useState(10);
-    const [selectedEffect, setSelectedEffect] = useState<'none' | 'fade-in' | 'blur' | 'zoom' | 'color-correction' | 'vintage' | 'black-white' | 'cinematic' | 'warm' | 'cool' | 'sepia' | 'hdr' | 'vivid' | 'soft-glow' | 'retro-film' | 'green-screen' | 'slow-motion' | 'glitch' | 'slide-left' | 'slide-right' | 'motion-tracking' | 'velocity' | 'motion-blur' | 'shake' | 'flash-effect' | 'rgb-split' | 'smooth-zoom' | 'film-grain' | 'old-tv'>('none');
+    const [selectedEffect, setSelectedEffect] = useState<string>('none');
     const [previewOpacity, setPreviewOpacity] = useState(1);
     const [previewZoom, setPreviewZoom] = useState(1);
     const [brightness, setBrightness] = useState(1);
@@ -2831,7 +2589,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             { id: 'motion-tracking', name: 'Motion Tracking', category: 'camera', description: 'Motion-tracking overlay marker.', icon: Crosshair, isClassic: true },
         ];
 
-        const proEffects = getAllProEffects().map(pe => ({
+        const proEffects = ALL_EFFECTS.map(pe => ({
             id: pe.id,
             name: pe.name,
             category: pe.category,
@@ -4029,7 +3787,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                     if (bufferCtx) {
                         activeStacked.forEach((eff) => {
-                            const mod = getEffectModule(eff.id);
+                            const mod = getEffectById(eff.id);
                             if (mod) {
                                 const startTime = eff.startTime ?? 0;
                                 const endTime = eff.endTime ?? video.duration ?? 9999;
@@ -4271,102 +4029,37 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
         }
     }, [selectedStyle]);
 
-
-
     const getPreviewCssFilter = () => {
-        if (videoRef.current) {
-            const t = videoRef.current.currentTime;
-            if (t < classicStartTime || t > classicEndTime) return 'none';
+        const effectObj = getEffectById(selectedEffect);
+        if (effectObj) {
+            if (effectObj.getDynamicStyle && videoRef.current) {
+                const dyn = effectObj.getDynamicStyle(videoRef.current.currentTime || 0);
+                if (dyn.filterCss) return dyn.filterCss;
+            }
+            if (effectObj.filterCss) return effectObj.filterCss;
         }
-        if (selectedEffect === 'blur') return `blur(${blurAmount}px)`;
-        if (selectedEffect === 'color-correction') return `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
-        if (selectedEffect === 'motion-blur') return `blur(${motionBlurAmount}px) brightness(1.05)`;
-        if (selectedEffect === 'rgb-split') return `contrast(1.2) saturate(1.3)`;
-        if (selectedEffect === 'film-grain') return 'contrast(1.05) saturate(1.1)';
-        if (selectedEffect === 'flash-effect') return 'brightness(1.4) contrast(1.15)';
-        if (selectedEffect === 'smooth-zoom') return 'contrast(1.1)';
-        if (selectedEffect === 'velocity') return 'saturate(1.1)';
-        if (selectedEffect === 'glitch') return 'contrast(1.1) saturate(1.25)';
         return 'none';
     };
 
     const getPreviewFilterCss = () => {
-        if (videoRef.current && (selectedEffect === 'black-white' || selectedEffect === 'cinematic' || selectedEffect === 'warm' || selectedEffect === 'cool' || selectedEffect === 'sepia' || selectedEffect === 'hdr' || selectedEffect === 'vivid')) {
-            const t = videoRef.current.currentTime;
-            if (t < classicStartTime || t > classicEndTime) return 'none';
-        }
-        if (selectedEffect === 'black-white') return 'grayscale(1)';
-        if (selectedEffect === 'cinematic') return 'contrast(1.4) brightness(1.1) saturate(1.2)';
-        if (selectedEffect === 'warm') return 'sepia(0.22) saturate(1.15) hue-rotate(-10deg)';
-        if (selectedEffect === 'cool') return 'saturate(1.08) hue-rotate(18deg)';
-        if (selectedEffect === 'sepia') return 'sepia(1)';
-        if (selectedEffect === 'hdr') return 'contrast(1.6) brightness(1.2) saturate(1.4)';
-        if (selectedEffect === 'vivid') return 'contrast(1.3) brightness(1.1) saturate(2.5)';
-
-        if (selectedFilter === 'black-white' || selectedFilter === 'pro-noir') return 'grayscale(1) contrast(1.35) brightness(0.95)';
-        if (selectedFilter === 'cinematic' || selectedFilter === 'pro-film-look') return 'contrast(1.35) brightness(1.05) saturate(1.15) sepia(0.08)';
-        if (selectedFilter === 'moody') return 'brightness(0.85) contrast(1.35) saturate(0.95)';
-        if (selectedFilter === 'warm-tone' || selectedFilter === 'pro-temperature') return 'sepia(0.25) saturate(1.2) hue-rotate(-10deg) brightness(1.05)';
-        if (selectedFilter === 'cool-tone') return 'saturate(1.1) hue-rotate(14deg) brightness(0.98)';
-        if (selectedFilter === 'vintage' || selectedFilter === 'pro-vintage') return 'sepia(0.4) contrast(0.95) brightness(1.05) saturate(0.85)';
-        if (selectedFilter === 'teal-orange' || selectedFilter === 'pro-teal-orange') return 'contrast(1.35) saturate(1.3) hue-rotate(-12deg) brightness(1.02)';
-        if (selectedFilter === 'dreamy-glow' || selectedFilter === 'pro-dream') return 'contrast(0.92) saturate(1.2) brightness(1.1)';
-        if (selectedFilter === 'film-look' || selectedFilter === 'pro-fade-film') return 'contrast(0.85) brightness(1.15) saturate(0.9)';
-        if (selectedFilter === 'vhs' || selectedFilter === 'pro-vhs-noise') return 'contrast(1.2) saturate(1.25) hue-rotate(5deg) sepia(0.08)';
-        if (selectedFilter === 'soft-skin') return 'brightness(1.05) saturate(1.15) contrast(0.95)';
-        if (selectedFilter === 'neon-glow' || selectedFilter === 'pro-glow') return 'saturate(1.5) brightness(1.1) contrast(1.2) hue-rotate(8deg)';
-        if (selectedFilter === 'hdr-pop' || selectedFilter === 'pro-hdr') return 'contrast(1.6) brightness(1.15) saturate(1.5)';
-        if (selectedFilter === 'pro-brightness') return 'brightness(1.3)';
-        if (selectedFilter === 'pro-contrast') return 'contrast(1.45)';
-        if (selectedFilter === 'pro-saturation') return 'saturate(1.7)';
-        if (selectedFilter === 'pro-exposure') return 'brightness(1.35) contrast(1.15)';
-        if (selectedFilter === 'pro-gamma') return 'contrast(1.25) brightness(1.1)';
-        if (selectedFilter === 'pro-tint') return 'hue-rotate(30deg) saturate(1.1)';
-        if (selectedFilter === 'pro-vibrance') return 'saturate(1.45) contrast(1.1)';
-        if (selectedFilter === 'pro-hue-rotate') return 'hue-rotate(90deg)';
-        if (selectedFilter === 'pro-color-balance') return 'contrast(1.15) saturate(1.2) hue-rotate(10deg)';
-        if (selectedFilter === 'pro-sepia') return 'sepia(0.9) contrast(1.1)';
-        if (selectedFilter === 'pro-bleach-bypass') return 'contrast(1.55) saturate(0.35) brightness(1.05)';
-        if (selectedFilter === 'pro-soft-glow') return 'contrast(0.92) saturate(1.2) brightness(1.1)';
-        if (selectedFilter === 'pro-gaussian-blur') return 'blur(4px)';
-        if (selectedFilter === 'pro-box-blur') return 'blur(3px) contrast(1.05)';
-        if (selectedFilter === 'pro-motion-blur') return 'blur(2.5px) contrast(1.15)';
-        if (selectedFilter === 'pro-radial-blur') return 'blur(3.5px) saturate(1.1)';
-        if (selectedFilter === 'pro-lens-blur') return 'blur(5px) brightness(1.05)';
-        if (selectedFilter === 'pro-fisheye') return 'contrast(1.25) saturate(1.15)';
-        if (selectedFilter === 'pro-wave') return 'hue-rotate(20deg) contrast(1.1)';
-        if (selectedFilter === 'pro-ripple') return 'contrast(1.15) saturate(1.1)';
-        if (selectedFilter === 'pro-bulge') return 'contrast(1.2) brightness(1.05)';
-        if (selectedFilter === 'pro-twirl') return 'hue-rotate(-20deg) contrast(1.1)';
-        if (selectedFilter === 'pro-lens-flare') return 'brightness(1.25) contrast(1.12) saturate(1.25)';
-        if (selectedFilter === 'pro-light-leak') return 'brightness(1.18) sepia(0.18) saturate(1.25)';
-        if (selectedFilter === 'pro-bloom') return 'brightness(1.15) contrast(1.08) saturate(1.18)';
-        if (selectedFilter === 'pro-shadow') return 'brightness(0.85) contrast(1.35) saturate(0.95)';
-        if (selectedFilter === 'pro-film-grain') return 'contrast(1.15) brightness(1.02) saturate(1.05)';
-        if (selectedFilter === 'pro-dust') return 'sepia(0.25) contrast(0.95) brightness(1.02)';
-        if (selectedFilter === 'pro-rgb-split') return 'contrast(1.25) saturate(1.35)';
-        if (selectedFilter === 'pro-static-noise') return 'contrast(1.35) grayscale(0.25) brightness(1.05)';
-        if (selectedFilter === 'pro-pixelate') return 'contrast(1.25) saturate(1.1)';
-        if (selectedFilter === 'pro-cartoon') return 'contrast(1.65) saturate(1.55)';
-        if (selectedFilter === 'pro-sketch') return 'grayscale(1) contrast(2.2) brightness(1.1)';
-        if (selectedFilter === 'pro-posterize') return 'contrast(1.85) saturate(1.45)';
-        if (selectedFilter === 'pro-oil-painting') return 'contrast(1.35) saturate(1.45) brightness(1.05)';
-        if (selectedFilter === 'pro-shake') return 'contrast(1.12) saturate(1.08)';
-        if (selectedFilter === 'pro-zoom-pulse') return 'contrast(1.18) brightness(1.05)';
-        if (selectedFilter === 'pro-slow-zoom') return 'contrast(1.08)';
-        if (selectedFilter === 'pro-flash') return 'brightness(1.35) contrast(1.2)';
-        if (selectedFilter === 'pro-strobe') return 'brightness(1.25) contrast(1.35)';
-
         return 'none';
     };
 
     const getCombinedPreviewFilterCss = () => {
-        const effectFilter = getPreviewCssFilter();
-        const filterFilter = getPreviewFilterCss();
-        if (effectFilter !== 'none' && filterFilter !== 'none') return `${effectFilter} ${filterFilter}`;
-        if (effectFilter !== 'none') return effectFilter;
-        if (filterFilter !== 'none') return filterFilter;
-        return 'none';
+        let filterStr = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+        if (selectedEffect && selectedEffect !== 'none') {
+            const effectObj = getEffectById(selectedEffect);
+            if (effectObj) {
+                const currentTime = videoRef.current ? videoRef.current.currentTime : 0;
+                if (effectObj.getDynamicStyle) {
+                    const dyn = effectObj.getDynamicStyle(currentTime);
+                    if (dyn.filterCss) filterStr += ` ${dyn.filterCss}`;
+                } else if (effectObj.filterCss) {
+                    filterStr += ` ${effectObj.filterCss}`;
+                }
+            }
+        }
+        return filterStr;
     };
 
     const getCropInsets = () => {
@@ -4393,41 +4086,19 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     };
 
     const getPreviewTransform = () => {
-        const zoomScale = selectedEffect === 'zoom' ? previewZoom : selectedEffect === 'smooth-zoom' ? 1 + smoothZoomAmount * Math.sin((progress / 100) * Math.PI) : 1;
-        let keyframeScale = 1;
-        if (keyframeMode === 'zoom-in') {
-            keyframeScale = 1 + (keyframeAmount - 1) * keyframeProgress;
-        } else if (keyframeMode === 'zoom-out') {
-            keyframeScale = keyframeAmount - (keyframeAmount - 1) * keyframeProgress;
-        } else if (keyframeMode === 'pulse') {
-            keyframeScale = 1 + (keyframeAmount - 1) * Math.sin(keyframeProgress * Math.PI);
+        const effectObj = getEffectById(selectedEffect);
+        let effectTransform = '';
+        if (effectObj) {
+            if (effectObj.getDynamicStyle && videoRef.current) {
+                const dyn = effectObj.getDynamicStyle(videoRef.current.currentTime || 0);
+                if (dyn.transformCss) effectTransform = ` ${dyn.transformCss}`;
+            } else if (effectObj.transformCss) {
+                effectTransform = ` ${effectObj.transformCss}`;
+            }
         }
-
-        let shakeOffset = '';
-        if (selectedEffect === 'shake') {
-            const t = performance.now() / 1000;
-            const strength = typeof shakeStrength !== 'undefined' ? shakeStrength : 1.5;
-            const x = Math.sin(t * 18) * strength * 1.2;
-            const y = Math.cos(t * 14) * strength * 0.9;
-            shakeOffset = ` translate(${x}px, ${y}px)`;
-        }
-
-        let rgbOffset = '';
-        if (selectedEffect === 'rgb-split') {
-            const offset = rgbSplitAmount;
-            rgbOffset = ` translate(${Math.sin(performance.now() / 150) * offset * 0.4}px, ${Math.cos(performance.now() / 180) * offset * 0.25}px)`;
-        }
-
-        let glitchOffset = '';
-        if (selectedEffect === 'glitch') {
-            const t = performance.now() / 130;
-            const x = Math.sin(t * 25) * 2.5;
-            const y = Math.cos(t * 31) * 1.8;
-            glitchOffset = ` translate(${x}px, ${y}px)`;
-        }
-
-        const baseTransform = `scale(${zoomScale * zoomToolAmount * keyframeScale}) rotate(${rotationDegrees}deg)`;
-        return `${baseTransform}${shakeOffset}${rgbOffset}${glitchOffset}`;
+        const zoomScale = selectedEffect === 'zoom' ? previewZoom : 1;
+        const baseTransform = `scale(${zoomScale * zoomToolAmount}) rotate(${rotationDegrees}deg)`;
+        return `${baseTransform}${effectTransform}`;
     };
 
     const activeTrim = activePreviewItem && activePreviewItem.type === 'video'
@@ -5007,65 +4678,15 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
     const getTransitionLayerStyle = (
         layer: 'from' | 'to',
-        type: TransitionType,
+        type: string,
         p: number
     ): React.CSSProperties => {
-        const isFrom = layer === 'from';
-        const base: React.CSSProperties = { opacity: 1, transform: 'none', filter: 'none' };
-
-        if (type === 'cross-dissolve') {
-            base.opacity = isFrom ? 1 - p : p;
-        } else if (type === 'slide-left') {
-            base.transform = isFrom ? `translateX(${-p * 100}%)` : `translateX(${(1 - p) * 100}%)`;
-        } else if (type === 'slide-right') {
-            base.transform = isFrom ? `translateX(${p * 100}%)` : `translateX(${-(1 - p) * 100}%)`;
-        } else if (type === 'zoom-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = isFrom ? `scale(${1 + p * 0.25})` : `scale(${1.25 - p * 0.25})`;
-        } else if (type === 'blur-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-            base.filter = `blur(${isFrom ? p * 10 : (1 - p) * 10}px)`;
-        } else if (type === 'spin-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = `rotate(${isFrom ? -120 * p : 120 * (1 - p)}deg) scale(${isFrom ? 1 - p * 0.15 : 0.85 + p * 0.15})`;
-        } else if (type === 'glitch-transition') {
-            const jitter = Math.sin(p * 80) * (isFrom ? 6 : 4);
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = `translateX(${jitter}px)`;
-            base.filter = `contrast(${1.2 + p}) saturate(${1.1 + p * 0.7}) hue-rotate(${isFrom ? p * 45 : (1 - p) * 45}deg)`;
-        } else if (type === 'fade-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-        } else if (type === 'swipe-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = isFrom ? `translateX(${-p * 120}%)` : `translateX(${(1 - p) * 120}%)`;
-        } else if (type === 'whip-pan-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = isFrom
-                ? `translateX(${-200 * p}%) skewX(${p * 10}deg) scale(${1 - p * 0.12})`
-                : `translateX(${200 * (1 - p)}%) skewX(${-(1 - p) * 10}deg) scale(${0.88 + p * 0.12})`;
-        } else if (type === 'mask-transition') {
-            const clipValue = isFrom ? `inset(0 ${p * 100}% 0 0)` : `inset(0 0 0 ${(1 - p) * 100}%)`;
-            base.clipPath = clipValue;
-            base.opacity = isFrom ? 1 - p * 0.5 : p;
-        } else if (type === 'camera-shake-transition') {
-            const shake = isFrom ? Math.sin(p * 40) * 8 * p : Math.sin((1 - p) * 40) * 8 * (1 - p);
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = `translate(${shake}px, ${shake / 2}px) rotate(${shake * 0.12}deg)`;
-            base.filter = `contrast(${1.1 + p * 0.2})`;
-        } else if (type === 'match-cut-transition') {
-            base.opacity = isFrom ? 1 - p * 0.9 : p * 0.9;
-            base.transform = isFrom ? 'none' : 'none';
-        } else if (type === 'speed-ramp-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-            base.transform = isFrom ? `scale(${1 + p * 0.15})` : `scale(${0.85 + p * 0.15})`;
-            base.filter = `blur(${p * 4}px)`;
-        } else if (type === 'flash-transition') {
-            base.opacity = isFrom ? 1 - p : p;
-        } else if (type === 'dip-black' || type === 'dip-white') {
-            base.opacity = isFrom ? (p < 0.5 ? 1 - p * 2 : 0) : (p < 0.5 ? 0 : (p - 0.5) * 2);
+        const tr = getTransitionById(type);
+        if (tr && tr.renderOverlayStyle) {
+            const res = tr.renderOverlayStyle(p);
+            return layer === 'from' ? (res.fromStyle || { opacity: 1 - p }) : (res.toStyle || { opacity: p });
         }
-
-        return base;
+        return { opacity: layer === 'from' ? 1 - p : p };
     };
 
     return (
@@ -5092,30 +4713,6 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </button>
-
-                    <div className="h-4 w-[1px] bg-white/10" />
-
-                    {/* Top Header Undo / Redo Icon Control Buttons */}
-                    <div className="flex items-center gap-1.5">
-                        <button
-                            onClick={undo}
-                            disabled={!canUndo}
-                            title="Undo (Ctrl+Z)"
-                            aria-label="Undo"
-                            className="flex items-center justify-center p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
-                        >
-                            <Undo2 className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={redo}
-                            disabled={!canRedo}
-                            title="Redo (Ctrl+Y)"
-                            aria-label="Redo"
-                            className="flex items-center justify-center p-2 rounded-lg bg-purple-500/15 border border-purple-500/30 hover:bg-purple-500/30 text-purple-300 hover:text-white disabled:opacity-30 disabled:hover:bg-purple-500/15 disabled:hover:text-purple-300 transition-all cursor-pointer disabled:cursor-not-allowed font-bold text-xs shadow-sm"
-                        >
-                            <Redo2 className="w-4 h-4" />
-                        </button>
-                    </div>
                 </div>
 
                 <div className="flex-1 flex justify-center">
@@ -5226,66 +4823,103 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                                         {/* ── TRANSITIONS panel ── */}
                                         {leftTab === 'transitions' && (
-                                            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
-                                                {/* Active clip indicator */}
-                                                <div className={`mb-3 px-2.5 py-1.5 rounded-lg text-[8px] font-bold uppercase tracking-wider text-center border ${
-                                                    activePreviewId
-                                                        ? 'bg-teal-500/10 border-teal-500/20 text-teal-300'
-                                                        : 'bg-white/[0.03] border-white/5 text-slate-500'
-                                                }`}>
-                                                    {activePreviewId ? `Clip selected · drag to apply` : 'Select a clip from the timeline first'}
-                                                </div>
+                                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-3 space-y-3">
+                                                {/* Search & Category Filter */}
+                                                <div className="space-y-2 shrink-0">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            value={proSearchQuery}
+                                                            onChange={e => setProSearchQuery(e.target.value)}
+                                                            placeholder="Search 150 transitions..."
+                                                            className="w-full pl-7 pr-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[9px] font-bold text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
+                                                        />
+                                                        <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                                                    </div>
 
-                                                {/* Transition grid */}
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {[
-                                                        { id: 'none',                    label: 'None',          icon: CircleOff,      color: '#94a3b8' },
-                                                        { id: 'fade-transition',         label: 'Fade',          icon: Droplets,       color: '#38bdf8' },
-                                                        { id: 'zoom-transition',         label: 'Zoom',          icon: ZoomIn,         color: '#a78bfa' },
-                                                        { id: 'blur-transition',         label: 'Blur',          icon: Wind,           color: '#c084fc' },
-                                                        { id: 'swipe-transition',        label: 'Swipe',         icon: MoveHorizontal, color: '#34d399' },
-                                                        { id: 'spin-transition',         label: 'Spin',          icon: RotateCw,       color: '#fb923c' },
-                                                        { id: 'whip-pan-transition',     label: 'Whip Pan',      icon: MoveRight,      color: '#f472b6' },
-                                                        { id: 'glitch-transition',       label: 'Glitch',        icon: ScanLine,       color: '#f87171' },
-                                                        { id: 'mask-transition',         label: 'Mask',          icon: Square,         color: '#facc15' },
-                                                        { id: 'flash-transition',        label: 'Flash',         icon: Zap,            color: '#fbbf24' },
-                                                        { id: 'camera-shake-transition', label: 'Shake',         icon: Vibrate,        color: '#60a5fa' },
-                                                        { id: 'match-cut-transition',    label: 'Match Cut',     icon: Scissors,       color: '#4ade80' },
-                                                        { id: 'speed-ramp-transition',   label: 'Speed Ramp',    icon: Gauge,          color: '#e879f9' },
-                                                        { id: 'wipe-transition',         label: 'Wipe',          icon: ChevronRight,   color: '#22d3ee' },
-                                                        { id: 'dissolve-transition',     label: 'Dissolve',      icon: Droplets,       color: '#a3e635' },
-                                                    ].map((tr) => {
-                                                        const isActive = activePreviewId && clipTransitions[activePreviewId] === tr.id;
-                                                        const Icon = tr.icon;
-                                                        return (
+                                                    {/* Category Filter Chips */}
+                                                    <div className="flex gap-1.5">
+                                                        {['all', 'basic', 'zoom', 'swipe'].map((cat) => (
                                                             <button
-                                                                key={tr.id}
-                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); applyTransitionForActiveClip(tr.id as any); }}
-                                                                type="button"
-                                                                title={tr.label}
-                                                                className={`relative flex flex-col items-center justify-center gap-2 h-[80px] rounded-xl border transition-all duration-200 group overflow-hidden ${
-                                                                    isActive
-                                                                        ? 'bg-teal-500/15 border-teal-400/60 shadow-[0_0_16px_rgba(45,212,191,0.25)] scale-[1.02]'
-                                                                        : 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5'
+                                                                key={cat}
+                                                                onClick={() => setProCategoryFilter(cat as any)}
+                                                                className={`flex-1 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
+                                                                    proCategoryFilter === cat
+                                                                        ? 'bg-teal-500/20 border-teal-500/40 text-teal-300'
+                                                                        : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'
                                                                 }`}
                                                             >
-                                                                {/* glow blob behind icon */}
-                                                                <div
-                                                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                                                                    style={{ background: `radial-gradient(circle at 50% 40%, ${tr.color}18 0%, transparent 70%)` }}
-                                                                />
-                                                                <Icon
-                                                                    size={20}
-                                                                    className="relative z-10 transition-transform duration-200 group-hover:scale-110"
-                                                                    style={{ color: isActive ? '#5eead4' : tr.color }}
-                                                                />
-                                                                <span className={`relative z-10 text-[8px] font-bold uppercase tracking-wider text-center leading-tight px-1 line-clamp-2 ${isActive ? 'text-teal-200' : 'text-slate-400 group-hover:text-slate-200'}`}>
-                                                                    {tr.label}
-                                                                </span>
-                                                                {isActive && (
-                                                                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-teal-400" />
-                                                                )}
+                                                                {cat}
                                                             </button>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider text-center border ${
+                                                        activePreviewId
+                                                            ? 'bg-teal-500/10 border-teal-500/20 text-teal-300'
+                                                            : 'bg-white/[0.03] border-white/5 text-slate-500'
+                                                    }`}>
+                                                        {activePreviewId ? `Clip selected · Click transition to apply` : 'Select a clip from timeline first'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Transitions Grid */}
+                                                <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-teal-500/20 [&::-webkit-scrollbar-thumb]:rounded-full">
+                                                    {['basic', 'zoom', 'swipe'].map((category) => {
+                                                        if (proCategoryFilter !== 'all' && proCategoryFilter !== category) return null;
+                                                        const items = (TRANSITIONS_BY_CATEGORY[category as 'basic' | 'zoom' | 'swipe'] || []).filter((tr) => {
+                                                            if (proSearchQuery.trim() && !tr.name.toLowerCase().includes(proSearchQuery.toLowerCase())) return false;
+                                                            return true;
+                                                        });
+                                                        if (items.length === 0) return null;
+                                                        const isCollapsed = collapsedCategories[`tr_${category}`];
+
+                                                        return (
+                                                            <div key={category} className="border border-white/5 rounded-xl overflow-hidden bg-black/10">
+                                                                <button
+                                                                    onClick={() => setCollapsedCategories(prev => ({ ...prev, [`tr_${category}`]: !prev[`tr_${category}`] }))}
+                                                                    className="w-full flex items-center justify-between px-2.5 py-1.5 bg-white/[0.02] hover:bg-white/[0.04] transition-all text-left cursor-pointer"
+                                                                >
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <span className="text-[8px] font-black uppercase tracking-wider text-teal-300">{category} Transitions</span>
+                                                                        <span className="text-[7.5px] text-slate-500">({items.length})</span>
+                                                                    </div>
+                                                                    <ChevronRight className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} />
+                                                                </button>
+
+                                                                {!isCollapsed && (
+                                                                    <div className="p-2 grid grid-cols-2 gap-2 bg-black/20">
+                                                                        {items.map((tr) => {
+                                                                            const isActive = activePreviewId && clipTransitions[activePreviewId] === tr.id;
+                                                                            return (
+                                                                                <button
+                                                                                    key={tr.id}
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault();
+                                                                                        e.stopPropagation();
+                                                                                        applyTransitionForActiveClip(tr.id);
+                                                                                    }}
+                                                                                    type="button"
+                                                                                    className={`flex flex-col justify-between p-2 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
+                                                                                        isActive
+                                                                                            ? 'bg-teal-500/20 border-teal-400/60 shadow-[0_0_12px_rgba(45,212,191,0.2)]'
+                                                                                            : 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-white/20'
+                                                                                    }`}
+                                                                                >
+                                                                                    <div className="flex items-center justify-between w-full mb-1">
+                                                                                        <span className={`text-[8.5px] font-bold leading-tight truncate ${isActive ? 'text-teal-200' : 'text-slate-200'}`}>{tr.name}</span>
+                                                                                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />}
+                                                                                    </div>
+                                                                                    <span className="text-[7px] text-slate-400 line-clamp-1 mb-1">{tr.description}</span>
+                                                                                    <span className={`text-[7px] font-mono px-1 py-0.5 rounded w-max ${isActive ? 'bg-teal-500/30 text-teal-200' : 'bg-white/5 text-slate-500'}`}>
+                                                                                        {tr.category}
+                                                                                    </span>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         );
                                                     })}
                                                 </div>
@@ -5296,26 +4930,26 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                         {leftTab === 'effects' && (
                                             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                                                 <div className="flex-1 flex flex-col min-h-0 p-3 space-y-3 overflow-hidden">
-                                                    {/* Search Bar & Filters */}
+                                                    {/* Search Bar & Category Filters */}
                                                     <div className="space-y-2 shrink-0">
                                                         <div className="relative">
                                                             <input
                                                                 type="text"
                                                                 value={proSearchQuery}
                                                                 onChange={e => setProSearchQuery(e.target.value)}
-                                                                placeholder="Search effects..."
+                                                                placeholder="Search 150 effects..."
                                                                 className="w-full pl-7 pr-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[9px] font-bold text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
                                                             />
                                                             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
                                                         </div>
 
-                                                        {/* Category Filter Chips */}
-                                                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar">
-                                                            {['all', 'glitch', 'blur', 'cinematic', 'vintage', 'color', 'light', 'motion', 'camera', 'stylize', 'creative', 'distortion', 'retro'].map((cat) => (
+                                                        {/* Category Filter Chips: ONLY Camera, Cinematic, Retro */}
+                                                        <div className="flex gap-1.5">
+                                                            {['all', 'camera', 'cinematic', 'retro'].map((cat) => (
                                                                 <button
                                                                     key={cat}
                                                                     onClick={() => setProCategoryFilter(cat as any)}
-                                                                    className={`px-2 py-0.5 rounded-full text-[7.5px] font-bold uppercase border transition-all cursor-pointer ${
+                                                                    className={`flex-1 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
                                                                         proCategoryFilter === cat
                                                                             ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
                                                                             : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'
@@ -5325,30 +4959,14 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                 </button>
                                                             ))}
                                                         </div>
-
-                                                        {/* Favorites Filter Switch */}
-                                                        <div className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.02] border border-white/5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-wider">Favorites Only</span>
-                                                            </div>
-                                                            <Switch
-                                                                checked={proShowFavorites}
-                                                                onCheckedChange={setProShowFavorites}
-                                                                className="scale-50 data-[state=checked]:bg-purple-500"
-                                                            />
-                                                        </div>
                                                     </div>
 
                                                     {/* Effects List */}
                                                     <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-500/20 [&::-webkit-scrollbar-thumb]:rounded-full">
-                                                        {/* Collapsible Categories */}
-                                                        {['color', 'cinematic', 'blur', 'distortion', 'light', 'noise', 'stylize', 'motion', 'camera', 'glitch', 'vintage', 'retro', 'creative'].map(category => {
+                                                        {['camera', 'cinematic', 'retro'].map(category => {
                                                             if (proCategoryFilter !== 'all' && proCategoryFilter !== category) return null;
                                                             
-                                                            // Filter effects for this category
-                                                            const effectsInCategory = getUnifiedEffects().filter((eff: any) => {
-                                                                if (eff.category !== category) return false;
+                                                            const effectsInCategory = (EFFECTS_BY_CATEGORY[category as 'camera' | 'cinematic' | 'retro'] || []).filter((eff) => {
                                                                 if (proSearchQuery.trim().length > 0 && !eff.name.toLowerCase().includes(proSearchQuery.toLowerCase())) return false;
                                                                 if (proShowFavorites && !proFavorites.includes(eff.id)) return false;
                                                                 return true;
@@ -5356,22 +4974,11 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                                                             if (effectsInCategory.length === 0) return null;
                                                             const isCollapsed = collapsedCategories[category];
-                                                            const CategoryIcon =
-                                                                category === 'camera' ? Camera :
-                                                                category === 'blur' ? Wind :
-                                                                category === 'glitch' ? Tv :
-                                                                category === 'cinematic' ? Film :
-                                                                category === 'vintage' ? CassetteTape :
-                                                                category === 'color' ? Palette :
-                                                                category === 'light' ? SunDim :
-                                                                category === 'noise' ? Tv :
-                                                                category === 'motion' ? Activity :
-                                                                category === 'stylize' ? Sparkles :
-                                                                category === 'retro' ? Clock3 : Waves;
+                                                            const CategoryIcon = category === 'camera' ? Camera : category === 'cinematic' ? Film : Clock3;
 
                                                             return (
                                                                 <div key={category} className="border border-white/5 rounded-xl overflow-hidden bg-black/10">
-                                                                    {/* Header */}
+                                                                    {/* Category Header */}
                                                                     <button
                                                                         onClick={() => setCollapsedCategories(prev => ({ ...prev, [category]: !prev[category] }))}
                                                                         className="w-full flex items-center justify-between px-2.5 py-1.5 bg-white/[0.02] hover:bg-white/[0.04] transition-all text-left cursor-pointer"
@@ -5387,39 +4994,21 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                     {/* Effects Grid */}
                                                                     {!isCollapsed && (
                                                                         <div className="p-2 grid grid-cols-1 gap-2 bg-black/20">
-                                                                            {effectsInCategory.map((eff: any) => {
+                                                                            {effectsInCategory.map((eff) => {
                                                                                 const isFav = proFavorites.includes(eff.id);
-                                                                                const isApplied = eff.isClassic 
-                                                                                    ? (selectedEffect === eff.id) 
-                                                                                    : stackedEffects.some(e => e.id === eff.id);
+                                                                                const isApplied = selectedEffect === eff.id;
                                                                                 return (
                                                                                     <div
                                                                                         key={eff.id}
-                                                                                        onContextMenu={(e) => {
-                                                                                            e.preventDefault();
-                                                                                            setProContextMenu({
-                                                                                                x: e.clientX,
-                                                                                                y: e.clientY,
-                                                                                                effectId: eff.id
-                                                                                            });
-                                                                                        }}
-                                                                                        className="flex gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all group select-none cursor-context-menu"
+                                                                                        className="flex gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-purple-500/30 hover:bg-white/[0.04] transition-all group select-none cursor-pointer"
                                                                                     >
-                                                                                        {/* Thumbnail with previewColor accent */}
-                                                                                        <div
-                                                                                            className="w-[45px] h-[45px] rounded-lg overflow-hidden shrink-0 border border-white/10 relative flex items-center justify-center"
-                                                                                            style={{ backgroundColor: eff.previewColor ? `${eff.previewColor}25` : '#1e1b4b' }}
-                                                                                        >
-                                                                                            <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent mix-blend-overlay" />
-                                                                                            <eff.icon className="w-4 h-4" style={{ color: eff.previewColor || '#c084fc' }} />
-                                                                                        </div>
-
                                                                                         {/* Details */}
                                                                                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                                                                                             <div className="flex items-start justify-between gap-1">
                                                                                                 <span className="text-[9px] font-bold text-white leading-tight truncate">{eff.name}</span>
                                                                                                 <button
-                                                                                                    onClick={() => {
+                                                                                                    onClick={(e) => {
+                                                                                                        e.stopPropagation();
                                                                                                         const nextFavs = isFav ? proFavorites.filter(id => id !== eff.id) : [...proFavorites, eff.id];
                                                                                                         setProFavorites(nextFavs);
                                                                                                         localStorage.setItem('veytrix_pro_favorites', JSON.stringify(nextFavs));
@@ -5429,34 +5018,12 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                                                     <Star className={`w-3.5 h-3.5 ${isFav ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                                                                                                 </button>
                                                                                             </div>
-                                                                                            <span className="text-[7.5px] text-slate-400 line-clamp-1 leading-snug mb-1">{eff.description}</span>
+                                                                                            <span className="text-[7.5px] text-slate-400 line-clamp-1 leading-snug mb-1.5">{eff.description}</span>
                                                                                             <button
                                                                                                 onClick={() => {
-                                                                                                    if (eff.isClassic) {
-                                                                                                        const next = isApplied ? 'none' : eff.id;
-                                                                                                        setSelectedEffect(next);
-                                                                                                        saveToUndo({ selectedEffect: next });
-                                                                                                    } else {
-                                                                                                        if (isApplied) {
-                                                                                                            const nextStacked = stackedEffects.filter(e => e.id !== eff.id);
-                                                                                                            setStackedEffects(nextStacked);
-                                                                                                            saveToUndo({ stackedEffects: nextStacked });
-                                                                                                        } else {
-                                                                                                            const nextStacked = [
-                                                                                                                ...stackedEffects,
-                                                                                                                {
-                                                                                                                    id: eff.id,
-                                                                                                                    params: { ...eff.defaultParameters },
-                                                                                                                    enabled: true
-                                                                                                                }
-                                                                                                            ];
-                                                                                                            setStackedEffects(nextStacked);
-                                                                                                            saveToUndo({ stackedEffects: nextStacked });
-                                                                                                            const nextRecents = [eff.id, ...proRecentlyUsed.filter(id => id !== eff.id)].slice(0, 5);
-                                                                                                            setProRecentlyUsed(nextRecents);
-                                                                                                            localStorage.setItem('veytrix_pro_recents', JSON.stringify(nextRecents));
-                                                                                                        }
-                                                                                                    }
+                                                                                                    const next = isApplied ? 'none' : eff.id;
+                                                                                                    setSelectedEffect(next);
+                                                                                                    saveToUndo({ selectedEffect: next });
                                                                                                 }}
                                                                                                 className={`w-full py-1 rounded-lg text-[8px] font-bold uppercase transition-all flex items-center justify-center gap-1 cursor-pointer ${
                                                                                                     isApplied
@@ -5464,7 +5031,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                                                         : 'bg-purple-500 text-white hover:bg-purple-600'
                                                                                                 }`}
                                                                                             >
-                                                                                                {isApplied ? 'Remove Effect' : 'Apply Effect'}
+                                                                                                {isApplied ? 'Remove' : 'Apply'}
                                                                                             </button>
                                                                                         </div>
                                                                                     </div>
@@ -5643,7 +5210,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                                     className="space-y-2"
                                                                 >
                                                                     {stackedEffects.map((applied, idx) => {
-                                                                        const mod = getEffectModule(applied.id);
+                                                                        const mod = getEffectById(applied.id);
                                                                         if (!mod) return null;
                                                                         const itemKey = applied.id + '_' + idx;
                                                                         const isExpanded = expandedAdjustmentId === itemKey;
@@ -6244,7 +5811,6 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                         onEnded={() => {
                                                             if (lastTriggeredEndRef.current !== activePreviewItem.id) {
                                                                 lastTriggeredEndRef.current = activePreviewItem.id;
-                                                                console.log("📹 [PLAYBACK] Clip reached end in onEnded:", activePreviewItem.id);
                                                                 playNextMedia(activePreviewItem.id);
                                                             }
                                                         }}
@@ -6252,70 +5818,51 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                             console.log("📹 [PLAYBACK] onLoadStart");
                                                         }}
                                                         onLoadedMetadata={() => {
-                                                            console.log("📹 [PLAYBACK] onLoadedMetadata");
-                                                            if (selectedEffect === 'fade-in') setPreviewOpacity(0);
-                                                            else setPreviewOpacity(1);
-                                                            if (selectedEffect !== 'zoom') setPreviewZoom(1);
+                                                            setPreviewOpacity(1);
+                                                            setPreviewZoom(1);
                                                         }}
                                                         onLoadedData={() => {
-                                                            console.log("📹 [PLAYBACK] onLoadedData, videoRef.current exists:", !!videoRef.current);
-                                                            // Reset current time to trim start when new video is loaded
                                                             if (videoRef.current) {
                                                                 const activeItem = mediaItems.find(i => i.id === activePreviewId);
                                                                 if (activeItem?.type === 'video') {
                                                                     const targetStart = getTargetStartTime(activeItem);
-                                                                    const videoElement = videoRef.current;
-                                                                    videoElement.currentTime = targetStart;
-                                                                    console.log("📹 [PLAYBACK] Video loaded, current time set to:", targetStart, "isPlaying:", isPlaying);
-
-                                                                    // Clear the pending seek offset once applied
+                                                                    videoRef.current.currentTime = targetStart;
                                                                     if (pendingTransitionSeekRef.current && pendingTransitionSeekRef.current.clipId === activePreviewId) {
                                                                         pendingTransitionSeekRef.current = null;
                                                                     }
-
-                                                                    safePlay(videoElement);
-                                                                } else {
-                                                                    videoRef.current.currentTime = 0;
+                                                                    safePlay(videoRef.current);
                                                                 }
                                                             }
                                                         }}
                                                         onCanPlay={(e) => {
-                                                            const videoElement = e.currentTarget;
-                                                            console.log("📹 [PLAYBACK] onCanPlay fired, isPlaying:", isPlaying, "videoElement:", !!videoElement);
-                                                            safePlay(videoElement);
+                                                            if (isPlayingRef.current) {
+                                                                safePlay(e.currentTarget);
+                                                            }
                                                         }}
                                                         onSeeked={(e) => {
-                                                            const videoElement = e.currentTarget;
-                                                            console.log("📹 [PLAYBACK] onSeeked fired, isPlaying:", isPlaying, "paused:", videoElement.paused);
-                                                            safePlay(videoElement);
+                                                            if (isPlayingRef.current) {
+                                                                safePlay(e.currentTarget);
+                                                            }
                                                         }}
                                                         onError={(e) => {
                                                             console.error("📹 [PLAYBACK] Video error:", e);
                                                         }}
                                                         src={activePreviewItem.preview}
-                                                        className={(CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || CANVAS_PREVIEW_FILTERS.includes(selectedFilter) || (stackedEffects && stackedEffects.some(e => e.enabled))) ? 'hidden' : 'w-full h-full object-contain'}
+                                                        className="w-full h-full object-contain"
                                                         style={{
-                                                            opacity: selectedEffect === 'fade-in' ? previewOpacity : 1,
+                                                            opacity: previewOpacity,
                                                             filter: getCombinedPreviewFilterCss(),
                                                             transform: getCombinedPreviewTransform(),
-                                                            clipPath: getPreviewClipPath(),
                                                             transformOrigin: 'center center',
                                                             borderRadius: `${cornerRadius}px`,
                                                         }}
                                                         muted={isMuted}
                                                         playsInline
                                                     />
-                                                    {(CANVAS_PREVIEW_EFFECTS.includes(selectedEffect) || CANVAS_PREVIEW_FILTERS.includes(selectedFilter) || (stackedEffects && stackedEffects.some(e => e.enabled))) && (
-                                                        <canvas
-                                                            ref={greenScreenCanvasRef}
-                                                            className="w-full h-full object-contain"
-                                                            style={{
-                                                                filter: getCombinedPreviewFilterCss(),
-                                                                transform: getCombinedPreviewTransform(),
-                                                                clipPath: getPreviewClipPath(),
-                                                                transformOrigin: 'center center',
-                                                                borderRadius: `${cornerRadius}px`,
-                                                            }}
+                                                    {getPreviewOverlayStyle() && (
+                                                        <div
+                                                            className="absolute inset-0 pointer-events-none z-20 transition-all duration-75"
+                                                            style={getPreviewOverlayStyle()}
                                                         />
                                                     )}
                                                 </>
@@ -6325,48 +5872,24 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                                                         src={activePreviewItem.preview}
                                                         className="w-full h-full object-contain"
                                                         style={{
-                                                            opacity: selectedEffect === 'fade-in' ? previewOpacity : 1,
+                                                            opacity: previewOpacity,
                                                             filter: getCombinedPreviewFilterCss(),
                                                             transform: getCombinedPreviewTransform(),
-                                                            clipPath: getPreviewClipPath(),
                                                             transformOrigin: 'center center',
                                                             borderRadius: `${cornerRadius}px`,
                                                         }}
                                                         alt="Preview"
                                                     />
+                                                    {getPreviewOverlayStyle() && (
+                                                        <div
+                                                            className="absolute inset-0 pointer-events-none z-20 transition-all duration-75"
+                                                            style={getPreviewOverlayStyle()}
+                                                        />
+                                                    )}
                                                 </>
                                             )}
                                             {audioUrl && <audio ref={audioRef} src={audioUrl} muted={isMuted} className="hidden" />}
                                             {bgMusicUrl && <audio ref={bgMusicRef} src={bgMusicUrl} className="hidden" />}
-                                            {selectedEffect === 'flash-effect' && (
-                                                <div
-                                                    className="absolute inset-0 pointer-events-none bg-white"
-                                                    style={{
-                                                        opacity: Math.min(0.5, Math.max(0, Math.sin((progress / 100) * Math.PI * 10) * 0.24 + 0.18)),
-                                                        mixBlendMode: 'screen',
-                                                    }}
-                                                />
-                                            )}
-                                            {selectedEffect === 'film-grain' && (
-                                                <div
-                                                    className="absolute inset-0 pointer-events-none"
-                                                    style={{
-                                                        backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-                                                        backgroundSize: '2px 2px, 2px 2px',
-                                                        opacity: 0.18,
-                                                        pointerEvents: 'none',
-                                                    }}
-                                                />
-                                            )}
-                                            {selectedEffect === 'rgb-split' && (
-                                                <div
-                                                    className="absolute inset-0 pointer-events-none"
-                                                    style={{
-                                                        boxShadow: `inset 0 0 0 ${rgbSplitAmount / 5}px rgba(255,0,100,0.12), inset 0 0 0 ${rgbSplitAmount / 8}px rgba(0,255,255,0.08)`,
-                                                    }}
-                                                />
-                                            )}
-                                            {/* Animated captions preview removed */}
                                         </motion.div>
                                     ) : (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center p-6">

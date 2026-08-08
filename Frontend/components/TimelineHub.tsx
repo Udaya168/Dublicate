@@ -539,56 +539,50 @@ export const TimelineHub = memo(({
 
   /* ── Split Clip ────────────────────────────────────────────── */
   const handleSplitClip = useCallback(() => {
-    if (selectedClipIds.length === 0) return;
-    selectedClipIds.forEach(id => {
-      const clip = clips.find(c => c.id === id);
-      if (!clip || clip.isLocked) return;
-      if (currentTime > clip.startTime && currentTime < clip.startTime + clip.duration) {
-        const offset = currentTime - clip.startTime;
+    const targetId = (selectedClipIds && selectedClipIds.length > 0) ? selectedClipIds[0] : activePreviewId;
+    if (!targetId) return;
+
+    const clip = clips.find(c => c.id === targetId);
+    if (!clip || clip.isLocked) return;
+
+    const clipGlobalStart = getClipGlobalStart ? getClipGlobalStart(clip.id) : clip.startTime;
+    const clipGlobalEnd = clipGlobalStart + clip.duration;
+
+    if (currentTime > clipGlobalStart + 0.05 && currentTime < clipGlobalEnd - 0.05) {
+      const offset = currentTime - clipGlobalStart;
+      
+      setMediaItems((prev: any) => {
+        const idx = prev.findIndex((p: any) => p.id === targetId);
+        if (idx === -1) return prev;
+        const orig = prev[idx];
+        const t = getTrimRangeForItem ? getTrimRangeForItem(orig.id, orig.duration) : { start: 0, end: orig.duration };
         
-        // Handle splitting
-        if (clip.type === "video" || clip.type === "image") {
-          setMediaItems((prev: any) => {
-            const idx = prev.findIndex((p: any) => p.id === id);
-            if (idx === -1) return prev;
-            const orig = prev[idx];
-            const t = getTrimRangeForItem ? getTrimRangeForItem(orig.id, orig.duration) : { start: 0, end: orig.duration };
-            
-            const leftId = Math.random().toString(36).slice(2);
-            const rightId = Math.random().toString(36).slice(2);
-            
-            const leftClip = { ...orig, id: leftId };
-            const rightClip = { ...orig, id: rightId };
-            
-            // Adjust start time overrides
-            setClipStartOverrides(prevStarts => ({
-              ...prevStarts,
-              [leftId]: clip.startTime,
-              [rightId]: currentTime,
-            }));
-            
-            // Keep tracks matched
-            setClipTrackOverrides(prevTracks => ({
-              ...prevTracks,
-              [leftId]: clip.trackId,
-              [rightId]: clip.trackId,
-            }));
+        const splitTimeInMedia = t.start + offset;
+        const leftId = `clip-${Date.now()}-left`;
+        const rightId = `clip-${Date.now()}-right`;
+        
+        const leftClip = { ...orig, id: leftId };
+        const rightClip = { ...orig, id: rightId };
 
-            setClipTrimRanges((pt: any) => ({
-              ...pt,
-              [leftId]: { start: t.start, end: t.start + offset },
-              [rightId]: { start: t.start + offset, end: t.end },
-            }));
-
-            const next = [...prev];
-            next.splice(idx, 1, leftClip, rightClip);
-            saveToUndo(next);
-            return next;
-          });
+        if (setClipTrimRanges) {
+          setClipTrimRanges((pt: any) => ({
+            ...pt,
+            [leftId]: { start: t.start, end: splitTimeInMedia },
+            [rightId]: { start: splitTimeInMedia, end: t.end },
+          }));
         }
-      }
-    });
-  }, [selectedClipIds, clips, currentTime, getTrimRangeForItem, setMediaItems, setClipTrimRanges, saveToUndo]);
+
+        const next = [...prev];
+        next.splice(idx, 1, leftClip, rightClip);
+        if (saveToUndo) saveToUndo(next);
+
+        if (setActivePreviewId) {
+          setTimeout(() => setActivePreviewId(rightId), 10);
+        }
+        return next;
+      });
+    }
+  }, [selectedClipIds, activePreviewId, clips, currentTime, getClipGlobalStart, getTrimRangeForItem, setMediaItems, setClipTrimRanges, saveToUndo, setActivePreviewId]);
 
   /* ── Clip Dragging Interactions ────────────────────────────── */
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: Clip) => {
