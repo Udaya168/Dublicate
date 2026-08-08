@@ -486,6 +486,7 @@ const FilmoraLeftPanel = memo(({
     captionStylePreset, setCaptionStylePreset,
     isCaptionPlacementMode, setIsCaptionPlacementMode,
     handleAutoCaption, isAutoCapturing, autoCaptionStatus,
+    mediaItems, setMediaItems, saveToUndo, setActivePreviewId, progress, getTotalEffectiveDuration,
     /* smart features + tools grid */
     aiOptions, toggleOption, copyActiveClip, setExpandedSections,
     /* aspect ratio */
@@ -503,21 +504,7 @@ const FilmoraLeftPanel = memo(({
     ] as const;
 
     const transitionItems = [
-        { id: 'none',                    label: 'None',       icon: CircleOff,      color: '#94a3b8' },
-        { id: 'fade-transition',         label: 'Fade',       icon: Droplets,       color: '#38bdf8' },
-        { id: 'zoom-transition',         label: 'Zoom',       icon: ZoomIn,         color: '#a78bfa' },
-        { id: 'blur-transition',         label: 'Blur',       icon: Wind,           color: '#c084fc' },
-        { id: 'swipe-transition',        label: 'Swipe',      icon: MoveHorizontal, color: '#34d399' },
-        { id: 'spin-transition',         label: 'Spin',       icon: RotateCw,       color: '#fb923c' },
-        { id: 'whip-pan-transition',     label: 'Whip Pan',   icon: MoveRight,      color: '#f472b6' },
-        { id: 'glitch-transition',       label: 'Glitch',     icon: ScanLine,       color: '#f87171' },
-        { id: 'mask-transition',         label: 'Mask',       icon: Square,         color: '#facc15' },
-        { id: 'flash-transition',        label: 'Flash',      icon: Zap,            color: '#fbbf24' },
-        { id: 'camera-shake-transition', label: 'Shake',      icon: Vibrate,        color: '#60a5fa' },
-        { id: 'match-cut-transition',    label: 'Match Cut',  icon: Scissors,       color: '#4ade80' },
-        { id: 'speed-ramp-transition',   label: 'Speed Ramp', icon: Gauge,          color: '#e879f9' },
-        { id: 'wipe-transition',         label: 'Wipe',       icon: ChevronRight,   color: '#22d3ee' },
-        { id: 'dissolve-transition',     label: 'Dissolve',   icon: Droplets,       color: '#a3e635' },
+        { id: 'none', label: 'None', icon: CircleOff, color: '#94a3b8' },
     ];
 
     const effectItems = [
@@ -760,6 +747,9 @@ const FilmoraLeftPanel = memo(({
                                         isCaptionPlacementMode={isCaptionPlacementMode} setIsCaptionPlacementMode={setIsCaptionPlacementMode}
                                         handleAutoCaption={handleAutoCaption}
                                         isAutoCapturing={isAutoCapturing} autoCaptionStatus={autoCaptionStatus}
+                                        mediaItems={mediaItems} setMediaItems={setMediaItems}
+                                        saveToUndo={saveToUndo} setActivePreviewId={setActivePreviewId}
+                                        progress={progress} getTotalEffectiveDuration={getTotalEffectiveDuration}
                                     />
                                 </div>
                             </div>
@@ -951,7 +941,13 @@ const ToolInspector = memo(({
     setIsCaptionPlacementMode,
     handleAutoCaption,
     isAutoCapturing,
-    autoCaptionStatus
+    autoCaptionStatus,
+    mediaItems = [],
+    setMediaItems,
+    saveToUndo,
+    setActivePreviewId,
+    progress = 0,
+    getTotalEffectiveDuration
 }: any) => {
     const [captionTab, setCaptionTab] = useState<'list' | 'style'>('list');
     const [newCaptionText, setNewCaptionText] = useState('');
@@ -959,7 +955,112 @@ const ToolInspector = memo(({
     const [newCaptionEnd, setNewCaptionEnd] = useState(3);
     const [activeEffectCategory, setActiveEffectCategory] = useState<'camera' | 'cinematic' | 'retro'>('camera');
     const [activeTransitionCategory, setActiveTransitionCategory] = useState<'basic' | 'zoom' | 'swipe'>('basic');
-    const handleSplitClip = () => {};
+
+    const handleSplitClip = () => {
+        if (!activePreviewItem) return;
+        const targetId = activePreviewItem.id;
+        const idx = mediaItems.findIndex((m: any) => m.id === targetId);
+        if (idx === -1) return;
+
+        const currentTrim = getTrimRangeForItem ? getTrimRangeForItem(targetId, activePreviewItem.duration) : { start: 0, end: activePreviewItem.duration };
+        
+        let offset = 0;
+        if (videoRef?.current && activePreviewItem.type === 'video' && videoRef.current.currentTime > currentTrim.start) {
+            offset = Math.max(0, videoRef.current.currentTime - currentTrim.start);
+        } else if (getTotalEffectiveDuration) {
+            let accumulatedBefore = 0;
+            for (let i = 0; i < idx; i++) {
+                const item = mediaItems[i];
+                const itemTrim = getTrimRangeForItem ? getTrimRangeForItem(item.id, item.duration) : { start: 0, end: item.duration };
+                accumulatedBefore += Math.max(0.01, itemTrim.end - itemTrim.start);
+            }
+            const totalDur = getTotalEffectiveDuration();
+            const currentGlobalTime = (progress / 100) * totalDur;
+            offset = Math.max(0, currentGlobalTime - accumulatedBefore);
+        }
+
+        const splitTimeInMedia = currentTrim.start + offset;
+
+        if (splitTimeInMedia <= currentTrim.start + 0.05 || splitTimeInMedia >= currentTrim.end - 0.05) {
+            return;
+        }
+
+        const leftId = `clip-${Date.now()}-left`;
+        const rightId = `clip-${Date.now()}-right`;
+
+        const leftClip = { ...activePreviewItem, id: leftId };
+        const rightClip = { ...activePreviewItem, id: rightId };
+
+        if (setClipTrimRanges) {
+            setClipTrimRanges((pt: any) => ({
+                ...pt,
+                [leftId]: { start: currentTrim.start, end: splitTimeInMedia },
+                [rightId]: { start: splitTimeInMedia, end: currentTrim.end },
+            }));
+        }
+
+        const next = [...mediaItems];
+        next.splice(idx, 1, leftClip, rightClip);
+        if (setMediaItems) setMediaItems(next);
+        if (saveToUndo) saveToUndo(next);
+        if (setActivePreviewId) setActivePreviewId(rightId);
+    };
+
+    const handleTrimLeftToPlayhead = () => {
+        if (!activePreviewItem) return;
+        const currentTrim = getTrimRangeForItem ? getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration) : { start: 0, end: activePreviewItem.duration };
+        let offset = 0;
+        if (videoRef?.current && activePreviewItem.type === 'video' && videoRef.current.currentTime > currentTrim.start) {
+            offset = Math.max(0, videoRef.current.currentTime - currentTrim.start);
+        } else if (getTotalEffectiveDuration) {
+            const idx = mediaItems.findIndex((m: any) => m.id === activePreviewItem.id);
+            let accumulatedBefore = 0;
+            for (let i = 0; i < idx; i++) {
+                const item = mediaItems[i];
+                const itemTrim = getTrimRangeForItem ? getTrimRangeForItem(item.id, item.duration) : { start: 0, end: item.duration };
+                accumulatedBefore += Math.max(0.01, itemTrim.end - itemTrim.start);
+            }
+            const totalDur = getTotalEffectiveDuration();
+            const currentGlobalTime = (progress / 100) * totalDur;
+            offset = Math.max(0, currentGlobalTime - accumulatedBefore);
+        }
+        const newStart = Math.min(currentTrim.end - 0.05, currentTrim.start + offset);
+        if (newStart > currentTrim.start && setClipTrimRanges) {
+            setClipTrimRanges((prev: any) => {
+                const next = { ...prev, [activePreviewItem.id]: { start: newStart, end: currentTrim.end } };
+                if (saveToUndo) saveToUndo({ clipTrimRanges: next });
+                return next;
+            });
+        }
+    };
+
+    const handleTrimRightToPlayhead = () => {
+        if (!activePreviewItem) return;
+        const currentTrim = getTrimRangeForItem ? getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration) : { start: 0, end: activePreviewItem.duration };
+        let offset = 0;
+        if (videoRef?.current && activePreviewItem.type === 'video' && videoRef.current.currentTime > currentTrim.start) {
+            offset = Math.max(0, videoRef.current.currentTime - currentTrim.start);
+        } else if (getTotalEffectiveDuration) {
+            const idx = mediaItems.findIndex((m: any) => m.id === activePreviewItem.id);
+            let accumulatedBefore = 0;
+            for (let i = 0; i < idx; i++) {
+                const item = mediaItems[i];
+                const itemTrim = getTrimRangeForItem ? getTrimRangeForItem(item.id, item.duration) : { start: 0, end: item.duration };
+                accumulatedBefore += Math.max(0.01, itemTrim.end - itemTrim.start);
+            }
+            const totalDur = getTotalEffectiveDuration();
+            const currentGlobalTime = (progress / 100) * totalDur;
+            offset = Math.max(0, currentGlobalTime - accumulatedBefore);
+        }
+        const newEnd = Math.max(currentTrim.start + 0.05, currentTrim.start + offset);
+        if (newEnd < currentTrim.end && setClipTrimRanges) {
+            setClipTrimRanges((prev: any) => {
+                const next = { ...prev, [activePreviewItem.id]: { start: currentTrim.start, end: newEnd } };
+                if (saveToUndo) saveToUndo({ clipTrimRanges: next });
+                return next;
+            });
+        }
+    };
 
     switch (activeTool) {
         case 'filters':
@@ -1068,7 +1169,7 @@ const ToolInspector = memo(({
                 <div className="space-y-3">
                     <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Transitions ({ALL_TRANSITIONS.length} Total)</span>
-                        <span className="text-[8px] text-purple-400 font-bold uppercase">{activeTransitionCategory} (50)</span>
+                        <span className="text-[8px] text-purple-400 font-bold uppercase">{activeTransitionCategory} ({(TRANSITIONS_BY_CATEGORY[activeTransitionCategory] || []).length})</span>
                     </div>
 
                     <div className="rounded border border-white/5 bg-white/[0.02] px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-slate-400 text-center">
@@ -1086,7 +1187,7 @@ const ToolInspector = memo(({
                                 onClick={() => setActiveTransitionCategory(cat)}
                                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${activeTransitionCategory === cat ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                             >
-                                {cat} (50)
+                                {cat} ({(TRANSITIONS_BY_CATEGORY[cat] || []).length})
                             </button>
                         ))}
                     </div>
@@ -1124,15 +1225,35 @@ const ToolInspector = memo(({
                         <span className="text-[8px] text-slate-500 font-bold uppercase">Cut Clip</span>
                     </div>
                     <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-3">
-                        <p className="text-[10px] text-slate-300">Place playhead at desired split position and click below.</p>
+                        <p className="text-[10px] text-slate-300">Place playhead at desired position on clip and split or trim.</p>
                         <button
                             type="button"
                             onClick={handleSplitClip}
-                            disabled={!activePreviewId}
-                            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                            disabled={!activePreviewItem}
+                            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                         >
-                            ✂️ Split Active Clip at Playhead
+                            <Scissors className="w-4 h-4" />
+                            <span>Split Active Clip at Playhead</span>
                         </button>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                            <button
+                                type="button"
+                                onClick={handleTrimLeftToPlayhead}
+                                disabled={!activePreviewItem}
+                                className="py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 font-bold text-[9px] uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1"
+                            >
+                                <span>◀ Trim Left</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleTrimRightToPlayhead}
+                                disabled={!activePreviewItem}
+                                className="py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 font-bold text-[9px] uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1"
+                            >
+                                <span>Trim Right ▶</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -1176,36 +1297,40 @@ const ToolInspector = memo(({
                 <div className="space-y-3">
                     <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Trim Clip</span>
-                        <span className="text-[8px] text-slate-500 font-bold uppercase">Cut</span>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase">Cut Duration</span>
                     </div>
-                    {activePreviewItem?.type === 'video' ? (
+                    {activePreviewItem ? (
                         <div className="space-y-3">
                             <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400">
-                                Duration: {activePreviewItem.duration.toFixed(2)}s
+                                Total Duration: {activePreviewItem.duration.toFixed(2)}s
                             </div>
                             <div>
                                 <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300 mb-0.5">
-                                    <span>Start</span>
+                                    <span>Start Time</span>
                                     <span>{getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration).start.toFixed(2)}s</span>
                                 </div>
                                 <input
                                     type="range"
                                     min={0}
-                                    max={Math.max(0, activePreviewItem.duration - 0.01)}
+                                    max={Math.max(0, activePreviewItem.duration - 0.05)}
                                     step={0.01}
                                     value={getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration).start}
                                     onChange={(e) => {
                                         const nextStart = Number(e.target.value);
                                         const current = getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration);
-                                        const safeEnd = Math.max(nextStart + 0.01, current.end);
-                                        setClipTrimRanges((prev: any) => ({
-                                            ...prev,
-                                            [activePreviewItem.id]: {
-                                                start: nextStart,
-                                                end: Math.min(activePreviewItem.duration, safeEnd),
-                                            },
-                                        }));
-                                        if (videoRef.current) {
+                                        const safeEnd = Math.max(nextStart + 0.05, current.end);
+                                        setClipTrimRanges((prev: any) => {
+                                            const updated = {
+                                                ...prev,
+                                                [activePreviewItem.id]: {
+                                                    start: nextStart,
+                                                    end: Math.min(activePreviewItem.duration, safeEnd),
+                                                },
+                                            };
+                                            if (saveToUndo) saveToUndo({ clipTrimRanges: updated });
+                                            return updated;
+                                        });
+                                        if (videoRef?.current && activePreviewItem.type === 'video') {
                                             videoRef.current.currentTime = nextStart;
                                         }
                                     }}
@@ -1215,46 +1340,73 @@ const ToolInspector = memo(({
 
                             <div>
                                 <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-slate-300 mb-0.5">
-                                    <span>End</span>
+                                    <span>End Time</span>
                                     <span>{getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration).end.toFixed(2)}s</span>
                                 </div>
                                 <input
                                     type="range"
-                                    min={0.01}
+                                    min={0.05}
                                     max={activePreviewItem.duration}
                                     step={0.01}
                                     value={getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration).end}
                                     onChange={(e) => {
                                         const nextEnd = Number(e.target.value);
                                         const current = getTrimRangeForItem(activePreviewItem.id, activePreviewItem.duration);
-                                        setClipTrimRanges((prev: any) => ({
-                                            ...prev,
-                                            [activePreviewItem.id]: {
-                                                start: current.start,
-                                                end: Math.max(current.start + 0.01, nextEnd),
-                                            },
-                                        }));
+                                        setClipTrimRanges((prev: any) => {
+                                            const updated = {
+                                                ...prev,
+                                                [activePreviewItem.id]: {
+                                                    start: current.start,
+                                                    end: Math.max(current.start + 0.05, nextEnd),
+                                                },
+                                            };
+                                            if (saveToUndo) saveToUndo({ clipTrimRanges: updated });
+                                            return updated;
+                                        });
                                     }}
                                     className="w-full accent-purple-400"
                                 />
                             </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleTrimLeftToPlayhead}
+                                    className="py-1.5 rounded bg-white/5 border border-white/10 text-slate-300 text-[8px] font-black uppercase hover:bg-white/10 cursor-pointer"
+                                >
+                                    ◀ Trim Left
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleTrimRightToPlayhead}
+                                    className="py-1.5 rounded bg-white/5 border border-white/10 text-slate-300 text-[8px] font-black uppercase hover:bg-white/10 cursor-pointer"
+                                >
+                                    Trim Right ▶
+                                </button>
+                            </div>
+
                             <button
+                                type="button"
                                 onClick={() => {
                                     if (activePreviewItem) {
-                                        setClipTrimRanges((prev: any) => ({
-                                            ...prev,
-                                            [activePreviewItem.id]: { start: 0, end: activePreviewItem.duration },
-                                        }));
+                                        setClipTrimRanges((prev: any) => {
+                                            const updated = {
+                                                ...prev,
+                                                [activePreviewItem.id]: { start: 0, end: activePreviewItem.duration },
+                                            };
+                                            if (saveToUndo) saveToUndo({ clipTrimRanges: updated });
+                                            return updated;
+                                        });
                                     }
                                 }}
-                                className="w-full py-1.5 rounded bg-white/5 border border-white/10 text-slate-300 text-[8px] font-black uppercase hover:bg-white/10"
+                                className="w-full py-1.5 rounded bg-white/5 border border-white/10 text-slate-300 text-[8px] font-black uppercase hover:bg-white/10 cursor-pointer"
                             >
                                 Reset Trim
                             </button>
                         </div>
                     ) : (
                         <div className="py-3 text-center text-[8px] font-bold uppercase tracking-widest text-slate-500">
-                            Select a video clip
+                            Select a clip from timeline
                         </div>
                     )}
                 </div>
@@ -2252,7 +2404,7 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     const [classicEndTime, setClassicEndTime] = useState<number>(5);
     const [proEffectsTab, setProEffectsTab] = useState<'classic' | 'pro'>('pro');
     const [proSearchQuery, setProSearchQuery] = useState('');
-    const [proCategoryFilter, setProCategoryFilter] = useState<'all' | 'camera' | 'blur' | 'glitch' | 'cinematic' | 'distortion'>('all');
+    const [proCategoryFilter, setProCategoryFilter] = useState<'all' | 'camera' | 'cinematic' | 'retro'>('all');
     const [proShowFavorites, setProShowFavorites] = useState(false);
     const [proFavorites, setProFavorites] = useState<string[]>(() => {
         try {
@@ -4712,27 +4864,6 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                         title="Back to Upload"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                    </button>
-                    <div className="h-4 w-[1px] bg-white/10 mx-1" />
-                    <button
-                        type="button"
-                        onClick={undo}
-                        disabled={!canUndo}
-                        className="p-1.5 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/40 text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
-                        title="Undo (Ctrl+Z)"
-                    >
-                        <Undo2 className="w-3.5 h-3.5 text-purple-400" />
-                        <span className="hidden sm:inline">Undo</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={redo}
-                        disabled={!canRedo}
-                        className="p-1.5 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/40 text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
-                        title="Redo (Ctrl+Y)"
-                    >
-                        <Redo2 className="w-3.5 h-3.5 text-purple-400" />
-                        <span className="hidden sm:inline">Redo</span>
                     </button>
                 </div>
 
