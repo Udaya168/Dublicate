@@ -4705,13 +4705,34 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
             {/* Top Header */}
             <header className="h-14 flex-none border-b border-white/10 flex items-center justify-between px-4 bg-black/20 backdrop-blur-3xl z-20">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => navigate("/quick-edit/upload")}
                         className="p-1.5 hover:bg-white/5 rounded transition-colors text-slate-400 hover:text-white"
                         title="Back to Upload"
                     >
                         <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <div className="h-4 w-[1px] bg-white/10 mx-1" />
+                    <button
+                        type="button"
+                        onClick={undo}
+                        disabled={!canUndo}
+                        className="p-1.5 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/40 text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
+                        title="Undo (Ctrl+Z)"
+                    >
+                        <Undo2 className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="hidden sm:inline">Undo</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={redo}
+                        disabled={!canRedo}
+                        className="p-1.5 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-purple-500/20 hover:border-purple-500/40 text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
+                        title="Redo (Ctrl+Y)"
+                    >
+                        <Redo2 className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="hidden sm:inline">Redo</span>
                     </button>
                 </div>
 
