@@ -5,7 +5,7 @@ import {
   Settings, Magnet, RotateCcw, ChevronDown, ChevronRight,
   Sparkles, MessageSquare, Maximize2, Minimize2, ZoomIn, ZoomOut,
   RefreshCw, MoreVertical, Play, Pause, Info, Tag, Check, Sliders,
-  Link, Link2, Link2Off, EyeClosed
+  Link, Link2, Link2Off, EyeClosed, Snowflake
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -537,9 +537,21 @@ export const TimelineHub = memo(({
     }]);
   }, [currentTime]);
 
+  /* ── Active Target Clip Resolution ───────────────────────────── */
+  const activeTargetClipId = useMemo(() => {
+    if (selectedClipIds && selectedClipIds.length > 0) return selectedClipIds[0];
+    if (activePreviewId) return activePreviewId;
+    const clipAtPlayhead = clips.find(c => {
+      const start = c.startTime;
+      const end = c.startTime + c.duration;
+      return currentTime >= start && currentTime <= end;
+    });
+    return clipAtPlayhead?.id || null;
+  }, [selectedClipIds, activePreviewId, clips, currentTime]);
+
   /* ── Split Clip ────────────────────────────────────────────── */
   const handleSplitClip = useCallback(() => {
-    const targetId = (selectedClipIds && selectedClipIds.length > 0) ? selectedClipIds[0] : activePreviewId;
+    const targetId = activeTargetClipId;
     if (!targetId) return;
 
     const clip = clips.find(c => c.id === targetId);
@@ -582,7 +594,129 @@ export const TimelineHub = memo(({
         return next;
       });
     }
-  }, [selectedClipIds, activePreviewId, clips, currentTime, getClipGlobalStart, getTrimRangeForItem, setMediaItems, setClipTrimRanges, saveToUndo, setActivePreviewId]);
+  }, [activeTargetClipId, clips, currentTime, getClipGlobalStart, getTrimRangeForItem, setMediaItems, setClipTrimRanges, saveToUndo, setActivePreviewId]);
+
+  /* ── Trim Start to Playhead ── */
+  const handleTrimLeftToPlayhead = useCallback(() => {
+    const targetId = activeTargetClipId;
+    if (!targetId) return;
+    const clip = clips.find(c => c.id === targetId);
+    if (!clip || clip.isLocked) return;
+
+    const clipGlobalStart = getClipGlobalStart ? getClipGlobalStart(clip.id) : clip.startTime;
+    const offset = Math.max(0, currentTime - clipGlobalStart);
+
+    if (setClipTrimRanges) {
+      const orig = mediaItems.find((p: any) => p.id === targetId);
+      if (!orig) return;
+      const t = getTrimRangeForItem ? getTrimRangeForItem(orig.id, orig.duration) : { start: 0, end: orig.duration };
+      const newStart = Math.min(t.end - 0.05, t.start + offset);
+      if (newStart > t.start) {
+        setClipTrimRanges((prev: any) => {
+          const next = { ...prev, [targetId]: { start: newStart, end: t.end } };
+          if (saveToUndo) saveToUndo({ clipTrimRanges: next });
+          return next;
+        });
+      }
+    }
+  }, [activeTargetClipId, clips, currentTime, getClipGlobalStart, mediaItems, getTrimRangeForItem, setClipTrimRanges, saveToUndo]);
+
+  /* ── Trim End to Playhead ── */
+  const handleTrimRightToPlayhead = useCallback(() => {
+    const targetId = activeTargetClipId;
+    if (!targetId) return;
+    const clip = clips.find(c => c.id === targetId);
+    if (!clip || clip.isLocked) return;
+
+    const clipGlobalStart = getClipGlobalStart ? getClipGlobalStart(clip.id) : clip.startTime;
+    const offset = Math.max(0, currentTime - clipGlobalStart);
+
+    if (setClipTrimRanges) {
+      const orig = mediaItems.find((p: any) => p.id === targetId);
+      if (!orig) return;
+      const t = getTrimRangeForItem ? getTrimRangeForItem(orig.id, orig.duration) : { start: 0, end: orig.duration };
+      const newEnd = Math.max(t.start + 0.05, t.start + offset);
+      if (newEnd < t.end) {
+        setClipTrimRanges((prev: any) => {
+          const next = { ...prev, [targetId]: { start: t.start, end: newEnd } };
+          if (saveToUndo) saveToUndo({ clipTrimRanges: next });
+          return next;
+        });
+      }
+    }
+  }, [activeTargetClipId, clips, currentTime, getClipGlobalStart, mediaItems, getTrimRangeForItem, setClipTrimRanges, saveToUndo]);
+
+  /* ── Freeze Frame ── */
+  const handleFreezeClip = useCallback(() => {
+    const targetId = activeTargetClipId;
+    if (!targetId) return;
+    const clip = clips.find(c => c.id === targetId);
+    if (!clip || clip.isLocked) return;
+
+    let snapshotPreview = clip.preview || '';
+    if (videoRef?.current && videoRef.current.videoWidth > 0) {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+          snapshotPreview = canvas.toDataURL('image/png');
+        }
+      } catch (e) {
+        console.warn("Freeze snapshot canvas capture fallback:", e);
+      }
+    }
+
+    const freezeId = `freeze-${Date.now()}`;
+    const freezeClip = {
+      id: freezeId,
+      file: null,
+      preview: snapshotPreview,
+      type: 'image' as const,
+      duration: 3.0,
+      isFrozen: true,
+    };
+
+    setMediaItems((prev: any) => {
+      const idx = prev.findIndex((p: any) => p.id === targetId);
+      if (idx === -1) {
+        const next = [...prev, freezeClip];
+        if (saveToUndo) saveToUndo(next);
+        return next;
+      }
+      const next = [...prev];
+      next.splice(idx + 1, 0, freezeClip);
+      if (saveToUndo) saveToUndo(next);
+      if (setActivePreviewId) setActivePreviewId(freezeId);
+      return next;
+    });
+  }, [activeTargetClipId, clips, videoRef, setMediaItems, saveToUndo, setActivePreviewId]);
+
+  /* ── Reverse Video ── */
+  const handleToggleReverse = useCallback(() => {
+    const targetId = activeTargetClipId;
+    if (!targetId) return;
+    setClipReverses((prev: any) => {
+      const nextState = !prev[targetId];
+      const next = { ...prev, [targetId]: nextState };
+      if (saveToUndo) saveToUndo({ clipReverses: next });
+      return next;
+    });
+  }, [activeTargetClipId, saveToUndo]);
+
+  /* ── Lock Clip ── */
+  const handleToggleLock = useCallback(() => {
+    const targetId = activeTargetClipId;
+    if (!targetId) return;
+    setClipLockedStates((prev: any) => {
+      const nextState = !prev[targetId];
+      const next = { ...prev, [targetId]: nextState };
+      if (saveToUndo) saveToUndo({ clipLockedStates: next });
+      return next;
+    });
+  }, [activeTargetClipId, saveToUndo]);
 
   /* ── Clip Dragging Interactions ────────────────────────────── */
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: Clip) => {
@@ -945,7 +1079,14 @@ export const TimelineHub = memo(({
         <div className="flex items-center gap-1">
           <TBtn icon={Plus} label="Add Track" onClick={handleAddTrack} text="Add Track" />
           <Divider />
-          <TBtn icon={Scissors} label="Split (Ctrl+B)" onClick={handleSplitClip} disabled={selectedClipIds.length === 0} />
+          <TBtn icon={Scissors} label="Split (Ctrl+B)" onClick={handleSplitClip} disabled={!activeTargetClipId} />
+          <TBtn icon={Scissors} label="Trim Start [" onClick={handleTrimLeftToPlayhead} disabled={!activeTargetClipId} />
+          <TBtn icon={Scissors} label="Trim End ]" onClick={handleTrimRightToPlayhead} disabled={!activeTargetClipId} />
+          <Divider />
+          <TBtn icon={Snowflake} label="Freeze Frame" onClick={handleFreezeClip} disabled={!activeTargetClipId} />
+          <TBtn icon={RotateCcw} label="Reverse Video" onClick={handleToggleReverse} active={Boolean(activeTargetClipId && clipReverses[activeTargetClipId])} disabled={!activeTargetClipId} />
+          <TBtn icon={Boolean(activeTargetClipId && clipLockedStates[activeTargetClipId]) ? Lock : Unlock} label={Boolean(activeTargetClipId && clipLockedStates[activeTargetClipId]) ? "Unlock Clip" : "Lock Clip"} onClick={handleToggleLock} active={Boolean(activeTargetClipId && clipLockedStates[activeTargetClipId])} disabled={!activeTargetClipId} />
+          <Divider />
           <TBtn icon={Trash2} label="Delete (Del)" danger onClick={() => { selectedClipIds.forEach(id => handleDeleteClip(id)); setSelectedClipIds([]); }} disabled={selectedClipIds.length === 0} />
           <Divider />
           <TBtn icon={Copy} label="Copy (Ctrl+C)" onClick={handleCopy} disabled={selectedClipIds.length === 0} />
@@ -1548,7 +1689,42 @@ export const TimelineHub = memo(({
                 className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
               >
                 <Scissors className="w-3.5 h-3.5 text-slate-500" />
-                Split
+                Split at Playhead
+              </button>
+              <button
+                onClick={() => { handleTrimLeftToPlayhead(); setContextMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                <Scissors className="w-3.5 h-3.5 text-slate-500" />
+                Trim Start to Playhead
+              </button>
+              <button
+                onClick={() => { handleTrimRightToPlayhead(); setContextMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                <Scissors className="w-3.5 h-3.5 text-slate-500" />
+                Trim End to Playhead
+              </button>
+              <button
+                onClick={() => { handleFreezeClip(); setContextMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                <Snowflake className="w-3.5 h-3.5 text-cyan-400" />
+                Freeze Frame
+              </button>
+              <button
+                onClick={() => { handleToggleReverse(); setContextMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-purple-400" />
+                {Boolean(contextMenu?.clipId && clipReverses[contextMenu.clipId]) ? "Disable Reverse" : "Reverse Playback"}
+              </button>
+              <button
+                onClick={() => { handleToggleLock(); setContextMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                {Boolean(contextMenu?.clipId && clipLockedStates[contextMenu.clipId]) ? <Unlock className="w-3.5 h-3.5 text-amber-400" /> : <Lock className="w-3.5 h-3.5 text-amber-400" />}
+                {Boolean(contextMenu?.clipId && clipLockedStates[contextMenu.clipId]) ? "Unlock Clip" : "Lock Clip"}
               </button>
               
               <div className="h-px bg-white/5 my-1" />

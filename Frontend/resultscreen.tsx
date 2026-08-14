@@ -207,7 +207,14 @@ export function QuickEditResultScreen() {
                                     className="max-h-full max-w-full z-10"
                                     controls
                                     autoPlay
-                                    loop
+                                    playsInline
+                                    preload="auto"
+                                    onError={(e) => console.error("Result video error:", e)}
+                                    onCanPlay={(e) => {
+                                        e.currentTarget.play().catch(err => {
+                                            console.warn("Autoplay prevented by browser policy, user can click play:", err);
+                                        });
+                                    }}
                                 />
                                 <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 text-purple-500/5 animate-pulse" />
                             </div>

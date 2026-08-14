@@ -38,6 +38,10 @@ import {
     Copy,
     Type,
     RotateCw,
+    RotateCcw,
+    Lock,
+    Unlock,
+    Snowflake,
     Crop,
     ZoomIn,
     MonitorPlay,
@@ -81,7 +85,6 @@ import {
     Clapperboard,
     MoonStar,
     Sun,
-    Snowflake,
     Contrast,
     Smile,
     Lightbulb,
@@ -105,6 +108,13 @@ import { useUndoRedo } from "./components/hooks/useUndoRedo";
 
 import { PremiumModal } from "@/components/premium-modal";
 import { MusicPickerModal } from "@/components/editor/music-picker-modal";
+
+const GithubIcon = ({ className = "w-4 h-4", size = 16 }: { className?: string; size?: number }) => (
+    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+        <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+);
 import { MusicStrip } from "@/components/editor/music-strip";
 import { useMusicContext } from "@/context/music-context";
 import {
@@ -355,6 +365,9 @@ const QUICK_TOOLS = [
     { id: 'transitions', icon: Layers, label: 'TRANSITIONS', color: '#818cf8' },
     { id: 'split', icon: Scissors, label: 'SPLIT', color: '#ec4899' },
     { id: 'trim', icon: Scissors, label: 'TRIM', color: '#34d399' },
+    { id: 'freeze', icon: Snowflake, label: 'FREEZE', color: '#38bdf8' },
+    { id: 'reverse', icon: RotateCcw, label: 'REVERSE', color: '#f472b6' },
+    { id: 'lock', icon: Lock, label: 'LOCK', color: '#fbbf24' },
     { id: 'filters', icon: Palette, label: 'FILTERS', color: '#fb7185' },
     { id: 'speed', icon: Timer, label: 'SPEED', color: '#a78bfa' },
     { id: 'copy', icon: Copy, label: 'COPY', color: '#38bdf8' },
@@ -456,42 +469,44 @@ export const PRO_50_FILTERS = [
 
 
 /* ─────────────────── Filmora-Style Left Panel ─────────────────── */
-const FilmoraLeftPanel = memo(({
-    activePreviewId, clipTransitions, applyTransitionForActiveClip,
-    selectedEffect, setSelectedEffect, selectedFilter, setSelectedFilter,
-    activeTool, setActiveTool, undo, redo, canUndo, canRedo,
-    /* tools panel props */
-    velocitySpeed, setVelocitySpeed, motionBlurAmount, setMotionBlurAmount,
-    shakeStrength, setShakeStrength, flashIntensity, setFlashIntensity,
-    rgbSplitAmount, setRgbSplitAmount, smoothZoomAmount, setSmoothZoomAmount,
-    filmGrainOpacity, setFilmGrainOpacity,
-    overlayTextStylePreset, setOverlayTextStylePreset, getOverlayTextEffectForPreset,
-    blurAmount, setBlurAmount, brightness, setBrightness, contrast, setContrast,
-    saturation, setSaturation, slowMotionSpeed, setSlowMotionSpeed,
-    glitchIntensity, setGlitchIntensity, animatedText, setAnimatedText,
-    overlayText, setOverlayText, overlayFontId, setOverlayFontId,
-    overlayFontSize, setOverlayFontSize, overlayColor, setOverlayColor,
-    overlayPosX, setOverlayPosX, overlayPosY, setOverlayPosY,
-    overlayBgEnabled, setOverlayBgEnabled, overlayBgColorHex, setOverlayBgColorHex,
-    isTextPlacementMode, setIsTextPlacementMode,
-    speedValue, setSpeedValue, activePreviewItem, getTrimRangeForItem,
-    clipTrimRanges, setClipTrimRanges, rotationDegrees, setRotationDegrees,
-    volumeLevel, setVolumeLevel, isMuted, setIsMuted,
-    cropWidthPct, setCropWidthPct, cropHeightPct, setCropHeightPct,
-    cropCenterX, setCropCenterX, cropCenterY, setCropCenterY,
-    zoomToolAmount, setZoomToolAmount, keyframeMode, setKeyframeMode,
-    keyframeAmount, setKeyframeAmount, videoRef,
-    captions, setCaptions, currentCaption, setCurrentCaption,
-    captionLanguage, setCaptionLanguage, captionStyle, setCaptionStyle,
-    captionStylePreset, setCaptionStylePreset,
-    isCaptionPlacementMode, setIsCaptionPlacementMode,
-    handleAutoCaption, isAutoCapturing, autoCaptionStatus,
-    mediaItems, setMediaItems, saveToUndo, setActivePreviewId, progress, getTotalEffectiveDuration,
-    /* smart features + tools grid */
-    aiOptions, toggleOption, copyActiveClip, setExpandedSections,
-    /* aspect ratio */
-    aspectRatio, applyAspectRatio, setIsCustomFrameOpen,
-}: any) => {
+const FilmoraLeftPanel = memo((props: any) => {
+    const {
+        activePreviewId, clipTransitions, applyTransitionForActiveClip,
+        selectedEffect, setSelectedEffect, selectedFilter, setSelectedFilter,
+        activeTool, setActiveTool, undo, redo, canUndo, canRedo,
+        /* tools panel props */
+        velocitySpeed, setVelocitySpeed, motionBlurAmount, setMotionBlurAmount,
+        shakeStrength, setShakeStrength, flashIntensity, setFlashIntensity,
+        rgbSplitAmount, setRgbSplitAmount, smoothZoomAmount, setSmoothZoomAmount,
+        filmGrainOpacity, setFilmGrainOpacity,
+        overlayTextStylePreset, setOverlayTextStylePreset, getOverlayTextEffectForPreset,
+        blurAmount, setBlurAmount, brightness, setBrightness, contrast, setContrast,
+        saturation, setSaturation, slowMotionSpeed, setSlowMotionSpeed,
+        glitchIntensity, setGlitchIntensity, animatedText, setAnimatedText,
+        overlayText, setOverlayText, overlayFontId, setOverlayFontId,
+        overlayFontSize, setOverlayFontSize, overlayColor, setOverlayColor,
+        overlayPosX, setOverlayPosX, overlayPosY, setOverlayPosY,
+        overlayBgEnabled, setOverlayBgEnabled, overlayBgColorHex, setOverlayBgColorHex,
+        isTextPlacementMode, setIsTextPlacementMode,
+        speedValue, setSpeedValue, activePreviewItem, getTrimRangeForItem,
+        clipTrimRanges, setClipTrimRanges, rotationDegrees, setRotationDegrees,
+        volumeLevel, setVolumeLevel, isMuted, setIsMuted,
+        cropWidthPct, setCropWidthPct, cropHeightPct, setCropHeightPct,
+        cropCenterX, setCropCenterX, cropCenterY, setCropCenterY,
+        zoomToolAmount, setZoomToolAmount, keyframeMode, setKeyframeMode,
+        keyframeAmount, setKeyframeAmount, videoRef,
+        captions, setCaptions, currentCaption, setCurrentCaption,
+        captionLanguage, setCaptionLanguage, captionStyle, setCaptionStyle,
+        captionStylePreset, setCaptionStylePreset,
+        isCaptionPlacementMode, setIsCaptionPlacementMode,
+        handleAutoCaption, isAutoCapturing, autoCaptionStatus,
+        mediaItems, setMediaItems, saveToUndo, setActivePreviewId, progress, getTotalEffectiveDuration,
+        clipSettings, setClipSettings, libraryAssets, setLibraryAssets,
+        /* smart features + tools grid */
+        aiOptions, toggleOption, copyActiveClip, setExpandedSections,
+        /* aspect ratio */
+        aspectRatio, applyAspectRatio, setIsCustomFrameOpen,
+    } = props;
     const [leftTab, setLeftTab] = useState<'media' | 'titles' | 'transitions' | 'effects' | 'filters' | 'tools'>('transitions');
 
     const leftTabs = [
@@ -945,6 +960,7 @@ const ToolInspector = memo(({
     mediaItems = [],
     setMediaItems,
     saveToUndo,
+    setClipSettings,
     setActivePreviewId,
     progress = 0,
     getTotalEffectiveDuration
@@ -1060,6 +1076,79 @@ const ToolInspector = memo(({
                 return next;
             });
         }
+    };
+
+    const [isReversed, setIsReversed] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
+
+    const handleToggleReverse = () => {
+        if (!activePreviewItem) return;
+        const targetId = activePreviewItem.id;
+        const nextState = !isReversed;
+        setIsReversed(nextState);
+        if (setClipSettings) {
+            setClipSettings((prev: any) => {
+                const next = { ...prev, [targetId]: { ...(prev[targetId] || {}), isReversed: nextState } };
+                if (saveToUndo) saveToUndo({ clipSettings: next });
+                return next;
+            });
+        }
+    };
+
+    const handleToggleLock = () => {
+        if (!activePreviewItem) return;
+        const targetId = activePreviewItem.id;
+        const nextState = !isLocked;
+        setIsLocked(nextState);
+        if (setClipSettings) {
+            setClipSettings((prev: any) => {
+                const next = { ...prev, [targetId]: { ...(prev[targetId] || {}), isLocked: nextState } };
+                if (saveToUndo) saveToUndo({ clipSettings: next });
+                return next;
+            });
+        }
+    };
+
+    const handleFreezeFrame = () => {
+        if (!activePreviewItem) return;
+        const targetId = activePreviewItem.id;
+        let snapshotPreview = activePreviewItem.preview;
+
+        if (videoRef?.current && videoRef.current.videoWidth > 0) {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoRef.current.videoWidth;
+                canvas.height = videoRef.current.videoHeight;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                    snapshotPreview = canvas.toDataURL('image/png');
+                }
+            } catch (e) {
+                console.warn("Freeze snapshot canvas capture fallback:", e);
+            }
+        }
+
+        const freezeId = `freeze-${Date.now()}`;
+        const freezeItem = {
+            id: freezeId,
+            file: null,
+            preview: snapshotPreview,
+            type: 'image' as const,
+            duration: 3.0,
+            isFrozen: true,
+        };
+
+        const idx = mediaItems.findIndex((m: any) => m.id === targetId);
+        const next = [...mediaItems];
+        if (idx >= 0) {
+            next.splice(idx + 1, 0, freezeItem);
+        } else {
+            next.push(freezeItem);
+        }
+        if (setMediaItems) setMediaItems(next);
+        if (saveToUndo) saveToUndo(next);
+        if (setActivePreviewId) setActivePreviewId(freezeId);
     };
 
     switch (activeTool) {
@@ -1254,6 +1343,77 @@ const ToolInspector = memo(({
                                 <span>Trim Right ▶</span>
                             </button>
                         </div>
+                    </div>
+                </div>
+            );
+        case 'freeze':
+            return (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Freeze Frame</span>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase">Snapshot</span>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <p className="text-[10px] text-slate-300">Capture frame at playhead and insert 3.0s frozen clip.</p>
+                        <button
+                            type="button"
+                            onClick={handleFreezeFrame}
+                            disabled={!activePreviewItem}
+                            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                        >
+                            <Snowflake className="w-4 h-4" />
+                            <span>Freeze Frame at Playhead</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        case 'reverse':
+            return (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Reverse Playback</span>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase">Backwards</span>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <p className="text-[10px] text-slate-300">Play selected video clip in reverse motion.</p>
+                        <button
+                            type="button"
+                            onClick={handleToggleReverse}
+                            disabled={!activePreviewItem}
+                            className={`w-full py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                                isReversed
+                                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 border border-purple-400'
+                                    : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+                            }`}
+                        >
+                            <RotateCcw className="w-4 h-4" />
+                            <span>{isReversed ? '⏪ Reversed (Click to Normal)' : 'Reverse Video Clip'}</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        case 'lock':
+            return (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Lock Clip</span>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase">Protection</span>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <p className="text-[10px] text-slate-300">Lock clip to prevent accidental splits, trims, moves, or deletion.</p>
+                        <button
+                            type="button"
+                            onClick={handleToggleLock}
+                            disabled={!activePreviewItem}
+                            className={`w-full py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                                isLocked
+                                    ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/30 border border-amber-400'
+                                    : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+                            }`}
+                        >
+                            {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                            <span>{isLocked ? '🔒 Clip Locked (Click to Unlock)' : '🔓 Lock Clip'}</span>
+                        </button>
                     </div>
                 </div>
             );
@@ -2256,12 +2416,28 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             }
             const video = document.createElement('video');
             video.preload = 'metadata';
-            video.onloadedmetadata = () => {
-                const duration = Number(video.duration || 0);
-                resolve(duration > 0 ? duration : 10);
+            let resolved = false;
+            const done = (dur: number) => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve(dur > 0 ? dur : 10);
+                }
             };
-            video.onerror = () => resolve(10);
+            const timer = setTimeout(() => done(10), 2500);
+            video.onloadedmetadata = () => {
+                clearTimeout(timer);
+                done(Number(video.duration || 0));
+            };
+            video.onerror = () => {
+                clearTimeout(timer);
+                done(10);
+            };
             video.src = previewUrl;
+            try {
+                video.load();
+            } catch (e) {
+                console.warn("video.load() exception:", e);
+            }
         });
     };
 
@@ -3268,32 +3444,33 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
     ]);
 
 
-    // Keep isPlayingRef in sync with state so event-handler closures always
-    // read the current value without stale-closure issues.
-    useEffect(() => {
-        isPlayingRef.current = isPlaying;
-    }, [isPlaying]);
+    // Sync isPlayingRef synchronously on render so event-handler closures always read the current value
+    isPlayingRef.current = isPlaying;
 
     const safePlay = useCallback((videoElement: HTMLVideoElement | null) => {
-        // Use ref so this works even when called from stale event-handler closures
-        if (!videoElement || !videoElement.isConnected || !isPlayingRef.current) return;
+        if (!videoElement || !videoElement.isConnected) return;
+        isPlayingRef.current = isPlaying;
+        if (!isPlaying) return;
 
         // Check if video is already playing
         if (!videoElement.paused) return;
 
-        videoElement.play().catch(err => {
-            if (err.name === 'AbortError') {
-                console.log("📹 [PLAYBACK] Play request aborted (media unmounted/reloaded).");
-                return;
-            }
-            console.warn("📹 [PLAYBACK] Play failed, trying muted fallback:", err);
-            setIsMuted(true);
-            videoElement.muted = true;
-            if (videoElement.isConnected && isPlayingRef.current && videoElement.paused) {
-                videoElement.play().catch(e => console.log("Muted play fallback failed", e));
-            }
-        });
-    }, [setIsMuted]);
+        const playPromise = videoElement.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                if (err.name === 'AbortError') {
+                    console.log("📹 [PLAYBACK] Play request aborted (media unmounted/reloaded).");
+                    return;
+                }
+                console.warn("📹 [PLAYBACK] Play failed, trying muted fallback:", err);
+                setIsMuted(true);
+                videoElement.muted = true;
+                if (videoElement.isConnected && videoElement.paused) {
+                    videoElement.play().catch(e => console.log("Muted play fallback failed", e));
+                }
+            });
+        }
+    }, [isPlaying, setIsMuted]);
 
 
     const triggerClipTransition = useCallback((nextId: string) => {
@@ -3389,19 +3566,33 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
             const trim = getTrimRangeForItem(activeItem.id, activeItem.duration);
             if (isPlaying) {
                 console.log("📹 [PLAYBACK] Pausing video");
+                isPlayingRef.current = false;
                 setIsPlaying(false);
+                if (videoRef.current) {
+                    videoRef.current.pause();
+                }
             } else {
                 console.log("📹 [PLAYBACK] Starting video from:", trim.start);
                 // Reset to trim start if outside trim range
                 if (videoRef.current && (videoRef.current.currentTime < trim.start || videoRef.current.currentTime > trim.end)) {
-                    videoRef.current.currentTime = trim.start;
+                    try {
+                        videoRef.current.currentTime = trim.start;
+                    } catch (e) {
+                        console.warn("📹 [PLAYBACK] Error setting currentTime:", e);
+                    }
                 }
+                isPlayingRef.current = true;
                 setIsPlaying(true);
+                if (videoRef.current) {
+                    safePlay(videoRef.current);
+                }
             }
         } else {
             // For images or when no video ref, just toggle the playing state
             console.log("📹 [PLAYBACK] Toggling play for image or no ref");
-            setIsPlaying(!isPlaying);
+            const nextState = !isPlaying;
+            isPlayingRef.current = nextState;
+            setIsPlaying(nextState);
         }
     };
 
@@ -4151,7 +4342,21 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     setMediaItems([newItem]);
                     setLibraryAssets([newItem]);
                     setActivePreviewId('initial');
-                    // Initialize undo history with initial state
+                    saveToUndo([newItem]);
+                });
+            } else {
+                const sampleUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+                getMediaDurationFromPreview(sampleUrl, 'video').then((resolvedDuration) => {
+                    const newItem = {
+                        id: 'demo-sample-1',
+                        file: null,
+                        preview: sampleUrl,
+                        type: 'video' as const,
+                        duration: resolvedDuration || 10,
+                    };
+                    setMediaItems([newItem]);
+                    setLibraryAssets([newItem]);
+                    setActivePreviewId('demo-sample-1');
                     saveToUndo([newItem]);
                 });
             }
@@ -4164,6 +4369,21 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                     file: initialAudio.file
                 }]);
             }
+        } else {
+            const sampleUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+            getMediaDurationFromPreview(sampleUrl, 'video').then((resolvedDuration) => {
+                const newItem = {
+                    id: 'demo-sample-1',
+                    file: null,
+                    preview: sampleUrl,
+                    type: 'video' as const,
+                    duration: resolvedDuration || 10,
+                };
+                setMediaItems([newItem]);
+                setLibraryAssets([newItem]);
+                setActivePreviewId('demo-sample-1');
+                saveToUndo([newItem]);
+            });
         }
     }, []);
 
@@ -4877,6 +5097,16 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <a
+                        href="https://github.com/Udaya168"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400 rounded-lg transition-all shadow-sm group"
+                        title="GitHub Account: Udaya168"
+                    >
+                        <GithubIcon className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
+                        <span className="text-purple-200 font-mono text-[11px]">Udaya168</span>
+                    </a>
                     <div className="flex items-center gap-1 text-amber-400 text-[10px] font-bold px-2 py-1 bg-amber-400/10 rounded border border-amber-400/20">
                         <Star className="w-3 h-3" />
                         <span>+ {profile?.credits?.userCredits ?? '0.00'}</span>

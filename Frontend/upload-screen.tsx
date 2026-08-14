@@ -6,6 +6,13 @@ import { useAuth } from "../context/auth-context";
 import { BrandLogo } from "../components/brand-logo";
 import { useRedirectParam } from "../lib/useRedirectParam";
 
+const GithubIcon = ({ className = "w-4 h-4", size = 16, color = "currentColor" }: { className?: string; size?: number; color?: string }) => (
+    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+        <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+);
+
 const particles = Array.from({ length: 40 });
 
 // ============================================
@@ -140,6 +147,25 @@ export function QuickEditUploadScreen() {
             }, 1500);
         }
     }, [files, audioFile, navigate]);
+
+    const handleUseSampleVideo = useCallback(() => {
+        setUploading(true);
+        setTimeout(() => {
+            setUploading(false);
+            const sampleUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+            navigate("/quick-edit/style", {
+                state: {
+                    initialMedias: [{
+                        name: 'sample_demo_video.mp4',
+                        type: 'video',
+                        preview: sampleUrl,
+                        file: null
+                    }],
+                    initialAudio: null
+                }
+            });
+        }, 600);
+    }, [navigate]);
 
     // ----- STYLES -----
     const styles: Record<string, React.CSSProperties> = {
@@ -545,6 +571,16 @@ export function QuickEditUploadScreen() {
                         </button>
                     </div>
                     <div style={styles.navRight}>
+                        <a
+                            href="https://github.com/Udaya168"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ ...styles.navBtn, textDecoration: 'none', background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.3)' }}
+                            title="GitHub: Udaya168"
+                        >
+                            <GithubIcon size={16} color="#c084fc" />
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e9d5ff' }}>Udaya168</span>
+                        </a>
                         <button style={{ ...styles.navBtn, padding: '8px' }}>
                             <User size={18} />
                         </button>
@@ -751,6 +787,30 @@ export function QuickEditUploadScreen() {
                         ) : (
                             <>Launch Neural Engine <ArrowRight size={18} /></>
                         )}
+                    </button>
+
+                    <button
+                        onClick={handleUseSampleVideo}
+                        disabled={uploading}
+                        style={{
+                            marginTop: '10px',
+                            padding: '12px 20px',
+                            background: 'rgba(59, 130, 246, 0.12)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '12px',
+                            color: '#93c5fd',
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            width: '100%',
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        <Play size={15} color="#60a5fa" /> Try Demo Sample Video
                     </button>
 
                     {/* Security */}
