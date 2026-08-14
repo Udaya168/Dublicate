@@ -572,14 +572,14 @@ export function QuickEditUploadScreen() {
                     </div>
                     <div style={styles.navRight}>
                         <a
-                            href="https://github.com/Udaya168"
+                            href="https://github.com/venkyk23"
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ ...styles.navBtn, textDecoration: 'none', background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.3)' }}
-                            title="GitHub: Udaya168"
+                            title="GitHub: venkyk23"
                         >
                             <GithubIcon size={16} color="#c084fc" />
-                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e9d5ff' }}>Udaya168</span>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#e9d5ff' }}>venkyk23</span>
                         </a>
                         <button style={{ ...styles.navBtn, padding: '8px' }}>
                             <User size={18} />

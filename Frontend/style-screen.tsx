@@ -5098,14 +5098,14 @@ export const QuickEditStyleScreen = memo(function QuickEditStyleScreen() {
 
                 <div className="flex items-center gap-3">
                     <a
-                        href="https://github.com/Udaya168"
+                        href="https://github.com/venkyk23"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400 rounded-lg transition-all shadow-sm group"
-                        title="GitHub Account: Udaya168"
+                        title="GitHub Account: venkyk23"
                     >
                         <GithubIcon className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
-                        <span className="text-purple-200 font-mono text-[11px]">Udaya168</span>
+                        <span className="text-purple-200 font-mono text-[11px]">venkyk23</span>
                     </a>
                     <div className="flex items-center gap-1 text-amber-400 text-[10px] font-bold px-2 py-1 bg-amber-400/10 rounded border border-amber-400/20">
                         <Star className="w-3 h-3" />

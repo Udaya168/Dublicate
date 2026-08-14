@@ -2,7 +2,7 @@
 
 An advanced, browser-based AI video editing web application built with React, Vite, TypeScript, and Tailwind CSS.
 
-Developed by [Udaya168](https://github.com/Udaya168).
+Developed & Maintained by [venkyk23](https://github.com/venkyk23).
 
 ---
 
@@ -31,7 +31,7 @@ Developed by [Udaya168](https://github.com/Udaya168).
 - **Frontend Framework**: React 18, Vite, TypeScript
 - **Styling**: Tailwind CSS, Framer Motion
 - **Icons**: Lucide React
-- **Repository**: [https://github.com/Udaya168/Dublicate](https://github.com/Udaya168/Dublicate)
+- **GitHub Profile**: [https://github.com/venkyk23](https://github.com/venkyk23)
 
 ---
 
@@ -39,7 +39,7 @@ Developed by [Udaya168](https://github.com/Udaya168).
 
 ```bash
 # Clone the repository
-git clone https://github.com/Udaya168/Dublicate.git
+git clone https://github.com/venkyk23/Dublicate.git
 
 # Navigate to directory
 cd Dublicate
@@ -56,4 +56,4 @@ npm run build
 
 ---
 
-Designed & Maintained by [Udaya168](https://github.com/Udaya168).
+Designed & Maintained by [venkyk23](https://github.com/venkyk23).
